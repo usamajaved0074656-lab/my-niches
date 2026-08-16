@@ -12,7 +12,10 @@ import crypto from 'node:crypto';
  */
 
 const COOKIE = 'mn_session';
-const DAYS = 30;
+// Long-lived on purpose: one password entry per device, then never again.
+// To sign every device out, change APP_PASSWORD — it is the HMAC key, so every
+// existing token stops verifying immediately.
+const DAYS = 365;
 
 export const passwordSet = () => Boolean(process.env.APP_PASSWORD);
 
