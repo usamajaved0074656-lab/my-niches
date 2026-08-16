@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>My Niches</title>
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<div class="shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <h1>MY <span>NICHES</span></h1>
+      <p><span class="dot"></span> <em id="countLabel">0 channels</em></p>
+    </div>
+
+    <nav class="nav" id="groupNav"></nav>
+
+    <div class="side-foot">
+      <button class="nav-item" id="exportBtn"><span class="ico">&#8595;</span> Export backup</button>
+      <button class="nav-item" id="importBtn"><span class="ico">&#8593;</span> Import backup</button>
+      <input type="file" id="importFile" accept="application/json,.json" hidden />
+      <button class="btn-primary big" id="addBtnSide">+ New niche</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="crumb">MY NICHES</div>
+      <div class="topbar-right">
+        <input id="search" class="search" type="search" placeholder="Search channel, niche, tag, notes…" />
+        <button class="btn-primary" id="addBtn">+ New niche</button>
+      </div>
+    </header>
+
+    <div class="filterbar">
+      <div class="pills" id="pills"></div>
+      <div class="filters-wrap">
+        <button class="filters-btn" id="filtersBtn">Filters <span id="filtersIcon"></span></button>
+        <div class="filters-menu" id="filtersMenu" hidden>
+          <h4>Sort by</h4>
+          <button data-sort="new">Newest added <span class="tick">✓</span></button>
+          <button data-sort="old">Oldest added <span class="tick">✓</span></button>
+          <button data-sort="subs">Most subscribers <span class="tick">✓</span></button>
+          <button data-sort="title">A–Z <span class="tick">✓</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shown only when one niche is selected -->
+    <div class="groupbar" id="groupbar" hidden>
+      <span class="gb-dot" id="gbDot"></span>
+      <span class="gb-title" id="gbTitle"></span>
+      <form class="gb-add" id="gbAdd">
+        <input id="gbUrl" placeholder="YouTube channel ya video link paste karo — is niche mein add ho jayega" />
+        <button class="btn-primary" type="submit" id="gbBtn">Add channel</button>
+      </form>
+      <button class="btn-ghost" id="gbSettings">Niche settings</button>
+    </div>
+    <p class="err" id="gbErr" hidden></p>
+
+    <section class="grid" id="grid"></section>
+
+    <div class="empty" id="empty" hidden>
+      <div class="icon" id="emptyIcon"></div>
+      <h3 id="emptyTitle">Abhi koi channel nahi hai</h3>
+      <p id="emptyMsg">Pehla niche bana kar usme channels dalna shuru karo.</p>
+      <button class="btn-primary" id="addBtnEmpty">+ Naya niche</button>
+    </div>
+  </main>
+</div>
+
+<!-- ============ channel drawer ============ -->
+<div class="drawer-backdrop" id="chDrawer" hidden>
+  <aside class="drawer">
+    <header class="drawer-head">
+      <div class="dh-ch" id="chHead"></div>
+      <button class="icon-btn" id="chClose" aria-label="Close"></button>
+    </header>
+
+    <div class="drawer-meta">
+      <label class="inline-lbl">Niche
+        <select id="chGroup" class="select"></select>
+      </label>
+      <button class="btn-ghost" id="chRefresh">Refresh stats</button>
+      <span class="save-state" id="chSaveState"></span>
+    </div>
+
+    <div class="drawer-body" id="chBody"></div>
+
+    <footer class="drawer-foot">
+      <button class="btn-ghost danger" id="chDelete">Remove channel</button>
+      <span class="spacer"></span>
+      <button class="btn-ghost" id="chDone">Done</button>
+    </footer>
+  </aside>
+</div>
+
+<!-- ============ niche (group) settings drawer ============ -->
+<div class="drawer-backdrop" id="drawer" hidden>
+  <aside class="drawer">
+    <header class="drawer-head">
+      <input id="d_title" class="title-input" placeholder="Niche ka naam" />
+      <button class="icon-btn" id="closeDrawer" aria-label="Close"></button>
+    </header>
+
+    <div class="drawer-meta">
+      <select id="d_status" class="select"></select>
+      <input id="d_tags" class="tag-input" placeholder="tags: wildlife, ai voice, sleep…" />
+      <span class="save-state" id="saveState"></span>
+    </div>
+
+    <div class="drawer-body">
+      <section class="block">
+        <div class="block-head"><h3>Niche ke notes</h3></div>
+        <textarea id="d_notes" class="notes-area" rows="14"
+          placeholder="Kyun kaam karta hai, hook pattern, thumbnail style, script format, kya try karna hai…"></textarea>
+      </section>
+      <p class="muted" id="d_count"></p>
+    </div>
+
+    <footer class="drawer-foot">
+      <button class="btn-ghost danger" id="deleteNiche">Delete niche</button>
+      <span class="spacer"></span>
+      <button class="btn-ghost" id="doneBtn">Done</button>
+    </footer>
+  </aside>
+</div>
+
+<!-- ============ in-app dialog ============ -->
+<div class="dlg-backdrop" id="dlg" hidden>
+  <div class="dlg">
+    <h2 id="dlgTitle"></h2>
+    <p id="dlgText" hidden></p>
+    <input id="dlgInput" hidden />
+    <div class="dlg-foot">
+      <button class="btn-ghost" id="dlgCancel">Cancel</button>
+      <button class="btn-primary" id="dlgOk">OK</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<!-- ============ login gate (only when APP_PASSWORD is set) ============ -->
+<div class="lock" id="lock" hidden>
+  <form class="lock-box" id="lockForm">
+    <h1>MY <span>NICHES</span></h1>
+    <p>Aage jaane ke liye password daalo.</p>
+    <input type="password" id="lockPass" placeholder="Password" autocomplete="current-password" />
+    <button class="btn-primary" type="submit" id="lockBtn">Kholo</button>
+    <p class="lock-err" id="lockErr" hidden></p>
+  </form>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

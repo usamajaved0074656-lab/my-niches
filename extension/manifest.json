@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "My Niches",
+  "version": "1.0.0",
+  "description": "YouTube browse karte hue channels seedha apni My Niches library mein save karo.",
+  "permissions": ["storage"],
+  "host_permissions": ["http://localhost:5173/*", "http://localhost/*", "https://*/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "My Niches"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: my-niches
+    runtime: node
+    plan: free
+    # Koi dependency nahi hai, is liye build par kuch install karne ko nahi.
+    buildCommand: echo "no build step"
+    startCommand: node server.js
+    healthCheckPath: /api/auth
+    envVars:
+      # Ye teeno Render dashboard mein khud bharni hain (yahan likhna mat).
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: APP_PASSWORD
+        sync: false
+      # Render ki free disk har restart par mit jati hai, to images mirror
+      # karne ka faida nahi — cards YouTube CDN se seedha load ho jate hain.
+      - key: MIRROR_IMAGES
+        value: "0"
+      # Node 18+ chahiye — server global fetch par chalta hai.
+      - key: NODE_VERSION
+        value: "22"

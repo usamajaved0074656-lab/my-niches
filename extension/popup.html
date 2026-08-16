@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<style>
+  :root {
+    --bg: #101010; --card: #191919; --line: #2a2a2a;
+    --text: #f2f5f4; --muted: #8d8d8d; --accent: #3ce01c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    width: 320px; margin: 0; padding: 16px; background: var(--bg); color: var(--text);
+    font: 14px/1.45 "Segoe UI", system-ui, sans-serif;
+  }
+  h1 { margin: 0 0 4px; font-size: 15px; letter-spacing: .05em; }
+  h1 span { color: var(--accent); }
+  .target { font-size: 12.5px; color: var(--muted); margin-bottom: 12px; word-break: break-all; }
+  input, button { font: inherit; }
+  input {
+    width: 100%; background: var(--card); border: 1px solid var(--line); color: var(--text);
+    border-radius: 9px; padding: 9px 11px; outline: none; margin-bottom: 8px;
+  }
+  input:focus { border-color: var(--accent); }
+  .list { display: flex; flex-direction: column; gap: 5px; max-height: 240px; overflow-y: auto; margin-bottom: 10px; }
+  .row {
+    display: flex; align-items: center; gap: 9px; width: 100%; text-align: left;
+    background: var(--card); border: 1px solid var(--line); color: var(--text);
+    border-radius: 9px; padding: 9px 11px; cursor: pointer;
+  }
+  .row:hover { border-color: var(--accent); }
+  .row.has { opacity: .65; }
+  .row.busy { border-color: var(--accent); }
+  .row.dim { opacity: .4; pointer-events: none; }
+  .row .n { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .c { font-size: 12px; color: var(--muted); }
+  .muted { color: var(--muted); font-size: 13px; }
+
+  .banner {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px; border-radius: 9px; font-size: 13px; margin-bottom: 10px;
+  }
+  .banner.ok { background: rgba(60,224,28,.12); border: 1px solid rgba(60,224,28,.45); color: #b8ffab; }
+  .banner.ok svg { color: var(--accent); flex: none; }
+  .banner.bad { background: rgba(255,93,93,.1); border: 1px solid rgba(255,93,93,.4); color: #ffb3b3; }
+
+  .off { text-align: center; padding: 14px 6px 6px; }
+  .off .ico { color: #ffcf5d; font-size: 24px; margin-bottom: 6px; }
+  .off b { font-size: 14.5px; }
+  .off p { color: var(--muted); font-size: 12.5px; line-height: 1.6; margin: 8px 0 12px; }
+  .off p b { color: var(--text); font-size: 12.5px; }
+  .retry {
+    background: var(--accent); color: #041003; border: 0; border-radius: 9px;
+    padding: 10px 18px; font-weight: 700; cursor: pointer;
+  }
+
+  .spin {
+    width: 14px; height: 14px; flex: none;
+    border: 2px solid rgba(60,224,28,.25); border-top-color: var(--accent);
+    border-radius: 50%; animation: rot .7s linear infinite;
+  }
+  @keyframes rot { to { transform: rotate(360deg); } }
+
+  .foot {
+    border-top: 1px solid var(--line); padding-top: 10px; margin-top: 4px;
+    display: flex; gap: 14px;
+  }
+  .link {
+    background: none; border: 0; color: var(--muted); cursor: pointer;
+    padding: 0; font-size: 12.5px; text-decoration: underline;
+  }
+  .link:hover { color: var(--text); }
+  .lbl { display: block; font-size: 11.5px; color: var(--muted); margin: 10px 0 4px; }
+  #cfg { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 4px; }
+  #cfg .retry { width: 100%; margin-top: 4px; }
+</style>
+</head>
+<body>
+  <h1>MY <span>NICHES</span></h1>
+  <div class="target" id="target">…</div>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <div id="main">
+    <input id="search" placeholder="Niche dhoondo…" />
+    <div class="list" id="list"><div class="muted">Loading…</div></div>
+  </div>
+
+  <div class="off" id="off" hidden>
+    <div class="ico">&#9888;</div>
+    <b>Server nahi mil raha</b>
+    <p>Jis PC par My Niches chalti hai, wahan <b>start.cmd</b> chalao. Phir:</p>
+    <button class="retry" id="retry">Dobara check karo</button>
+  </div>
+
+  <div class="foot">
+    <button class="link" id="openApp">Library kholo</button>
+    <button class="link" id="toggleCfg">Settings</button>
+  </div>
+
+  <div id="cfg" hidden>
+    <label class="lbl">Server ka address</label>
+    <input id="cfgBase" placeholder="http://localhost:5173" />
+    <label class="lbl">Password (sirf hosted server ke liye)</label>
+    <input id="cfgKey" type="password" placeholder="khaali chhor do agar password nahi" />
+    <button class="retry" id="cfgSave">Save</button>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

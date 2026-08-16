@@ -1,0 +1,140 @@
+#nichecore-root {
+  --nc-bg: #101010;
+  --nc-card: #191919;
+  --nc-line: #2a2a2a;
+  --nc-text: #f2f5f4;
+  --nc-muted: #8d8d8d;
+  --nc-accent: #3ce01c;
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  /* Never grow or shrink — we are a guest in someone else's flex row. */
+  flex: 0 0 auto;
+  align-self: center;
+  margin-left: 6px;
+  z-index: 2500;
+  font: 14px/1.45 "Roboto", "Segoe UI", system-ui, sans-serif;
+  color: var(--nc-text);
+}
+
+#nichecore-root * { box-sizing: border-box; }
+#nichecore-root [hidden] { display: none !important; }
+
+/* Round icon button, same height as YouTube's own Subscribe pill. */
+.nc-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; padding: 0;
+  background: var(--nc-accent); color: #041003;
+  border: 0; border-radius: 50%; cursor: pointer; flex: none;
+}
+.nc-btn:hover { filter: brightness(1.08); }
+.nc-btn svg { display: block; }
+
+/* Fixed layer at the top of the document — YouTube's button row clips overflow,
+   so a nested dropdown would be sliced off. Position comes from placePanel(). */
+#nichecore-panel {
+  --nc-bg: #101010;
+  --nc-card: #191919;
+  --nc-line: #2a2a2a;
+  --nc-text: #f2f5f4;
+  --nc-muted: #8d8d8d;
+  --nc-accent: #3ce01c;
+
+  position: fixed; top: 0; left: 0; width: 330px;
+  background: var(--nc-bg); border: 1px solid var(--nc-line);
+  border-radius: 14px; padding: 14px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, .6);
+  display: flex; flex-direction: column; gap: 10px;
+  z-index: 2147483000;
+  font: 14px/1.45 "Roboto", "Segoe UI", system-ui, sans-serif;
+  color: var(--nc-text);
+}
+#nichecore-panel * { box-sizing: border-box; }
+#nichecore-panel [hidden] { display: none !important; }
+
+.nc-head { display: flex; align-items: center; gap: 8px; }
+.nc-head strong { font-size: 14px; flex: 1; }
+.nc-x {
+  background: none; border: 0; color: var(--nc-muted);
+  cursor: pointer; font-size: 15px; padding: 2px 6px; border-radius: 6px;
+}
+.nc-x:hover { background: #1f1f1f; color: var(--nc-text); }
+
+.nc-search, .nc-new input, .nc-new select {
+  background: var(--nc-card); border: 1px solid var(--nc-line); color: var(--nc-text);
+  border-radius: 9px; padding: 9px 11px; outline: none; font: inherit; width: 100%;
+}
+.nc-search:focus, .nc-new input:focus { border-color: var(--nc-accent); }
+
+.nc-list { display: flex; flex-direction: column; gap: 5px; max-height: 260px; overflow-y: auto; }
+
+.nc-row {
+  display: flex; align-items: center; gap: 9px; width: 100%;
+  background: var(--nc-card); border: 1px solid var(--nc-line); color: var(--nc-text);
+  border-radius: 9px; padding: 9px 11px; cursor: pointer; text-align: left; font: inherit;
+}
+.nc-row:hover { border-color: var(--nc-accent); }
+.nc-row.has { opacity: .6; }
+.nc-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nc-count { font-size: 12px; color: var(--nc-muted); }
+
+.nc-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nc-muted); flex: none; }
+.nc-dot.Researching { background: #4aa3ff; }
+.nc-dot.Future { background: #c07bff; }
+.nc-dot.Building { background: var(--nc-accent); }
+.nc-dot.Parked { background: #8b9491; }
+
+.nc-new { display: grid; grid-template-columns: 1fr auto auto; gap: 6px; }
+.nc-new select { width: auto; padding: 9px 6px; }
+.nc-new button {
+  background: var(--nc-accent); color: #041003; border: 0; border-radius: 9px;
+  padding: 9px 14px; font: 700 13px/1 "Roboto", "Segoe UI", system-ui, sans-serif; cursor: pointer;
+}
+
+.nc-msg { font-size: 12.5px; padding: 2px 2px 0; }
+.nc-msg.good { color: var(--nc-accent); }
+.nc-msg.bad, .nc-muted.bad { color: #ff5d5d; }
+.nc-muted { color: var(--nc-muted); font-size: 13px; padding: 6px 2px; }
+
+/* ---------- state feedback ---------- */
+
+.nc-banner {
+  display: flex; align-items: center; gap: 9px;
+  padding: 11px 13px; border-radius: 10px; font-size: 13.5px; line-height: 1.4;
+}
+.nc-banner svg { flex: none; }
+.nc-banner.ok {
+  background: rgba(60, 224, 28, .12); border: 1px solid rgba(60, 224, 28, .45);
+  color: #b8ffab;
+}
+.nc-banner.ok svg { color: var(--nc-accent); }
+.nc-banner.bad {
+  background: rgba(255, 93, 93, .1); border: 1px solid rgba(255, 93, 93, .4);
+  color: #ffb3b3;
+}
+
+.nc-off { text-align: center; padding: 18px 8px 10px; }
+.nc-off-ico { color: #ffcf5d; margin-bottom: 8px; }
+.nc-off b { font-size: 15px; }
+.nc-off p { color: var(--nc-muted); font-size: 12.5px; line-height: 1.6; margin: 8px 0 14px; }
+.nc-off p b { font-size: 12.5px; color: var(--nc-text); }
+.nc-retry {
+  background: var(--nc-accent); color: #041003; border: 0; border-radius: 9px;
+  padding: 10px 18px; font: 700 13px/1 "Roboto", "Segoe UI", system-ui, sans-serif; cursor: pointer;
+}
+.nc-retry:hover { filter: brightness(1.08); }
+
+.nc-row.busy { border-color: var(--nc-accent); }
+.nc-row.dim { opacity: .4; pointer-events: none; }
+.nc-loading { padding: 14px 2px; }
+
+.nc-spin {
+  width: 14px; height: 14px; flex: none;
+  border: 2px solid rgba(60, 224, 28, .25); border-top-color: var(--nc-accent);
+  border-radius: 50%; animation: nc-rot .7s linear infinite;
+}
+@keyframes nc-rot { to { transform: rotate(360deg); } }
+
+.nc-btn.nc-done { background: #1d6b12; color: #d6ffcb; }

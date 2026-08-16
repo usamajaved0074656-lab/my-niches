@@ -1,0 +1,14 @@
+{
+  "name": "niche-core",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Local niche library — group YouTube channels under niches, auto-fetch metadata from a link, keep your own notes.",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "migrate": "node migrate.js"
+  }
+}
