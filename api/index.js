@@ -1,4 +1,4 @@
-import { handleRequest, configErrors } from '../app.js';
+import { handleRequest, configErrors } from '../lib/handler.js';
 
 /**
  * Vercel serverless entry. Vercel serves everything in public/ from its CDN,

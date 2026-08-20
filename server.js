@@ -1,5 +1,5 @@
 import http from 'node:http';
-import { handleRequest, configErrors, store, PORT } from './app.js';
+import { handleRequest, configErrors, store, PORT } from './lib/handler.js';
 import { passwordSet } from './auth.js';
 
 /**
