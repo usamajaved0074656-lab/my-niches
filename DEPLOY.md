@@ -1,6 +1,6 @@
 # Live deploy — ek link, har device par
 
-> **Ab live hai: https://my-niches.vercel.app** (Vercel par). Neeche wale Render steps sirf reference ke liye hain.
+> **Ab live hai: https://<tumhara-project>.vercel.app** (Vercel par). Neeche wale Render steps sirf reference ke liye hain.
 
 Deploy karne ke baad zip/`start.cmd`/PC-on rakhne ka jhanjhat khatam. Ek URL, phone se bhi khulega.
 
@@ -92,7 +92,7 @@ sota bhi nahi.
 
 **Setup jo ho chuka hai:**
 
-- Project: `my-niches` (Hobby plan), repo `usamajaved0074656-lab/my-niches`
+- Project: `my-niches` (Hobby plan), apna GitHub repo
 - Framework Preset: **Other** — "Node" preset root ki har `.js` ko serverless
   function bana deta tha, jis se `app.mjs` par `Invalid export` error aata tha.
   Isi liye handler ab `lib/handler.js` mein hai, root mein nahi.
