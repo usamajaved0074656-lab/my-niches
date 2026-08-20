@@ -1,5 +1,7 @@
 # Live deploy — ek link, har device par
 
+> **Ab live hai: https://my-niches.vercel.app** (Vercel par). Neeche wale Render steps sirf reference ke liye hain.
+
 Deploy karne ke baad zip/`start.cmd`/PC-on rakhne ka jhanjhat khatam. Ek URL, phone se bhi khulega.
 
 ---
@@ -77,3 +79,38 @@ Render free service 15 minute be-istemal rehne par so jati hai. Agli dafa kholne
 - Password kisi public jagah (Drive link, group chat) mein mat daalo
 - Password badalna ho: Render mein `APP_PASSWORD` badlo → sab sessions apne aap khatam (token usi password se sign hota hai)
 - Sab band karna ho: Render mein service delete kar do; local app aur Supabase jaise the waise rahenge
+
+
+---
+
+## Vercel (jo abhi chal raha hai)
+
+Render ka free tier poore account ko **750 instance-hours per month** deta hai. Do
+services 24/7 chalane par ~1,490 hours chahiye — is liye 20 August ko quota khatam
+ho gaya aur dono services 502/503 dene lagin. Vercel par ye limit nahi hai aur app
+sota bhi nahi.
+
+**Setup jo ho chuka hai:**
+
+- Project: `my-niches` (Hobby plan), repo `usamajaved0074656-lab/my-niches`
+- Framework Preset: **Other** — "Node" preset root ki har `.js` ko serverless
+  function bana deta tha, jis se `app.mjs` par `Invalid export` error aata tha.
+  Isi liye handler ab `lib/handler.js` mein hai, root mein nahi.
+- Environment Variables: `SUPABASE_URL`, `SUPABASE_KEY`, `APP_PASSWORD`, `MIRROR_IMAGES=0`
+- `vercel.json` sirf `/api/*` ko function par bhejta hai; `public/` Vercel ka CDN
+  seedha serve karta hai.
+
+**Code ki taqseem:**
+
+| File | Kaam |
+|---|---|
+| `lib/handler.js` | saara request handling — dono jagah yehi chalta hai |
+| `server.js` | local/container launcher (`node server.js`) |
+| `api/index.js` | Vercel serverless entry |
+
+Serverless par disk read-only hoti hai, is liye `uploads/` banana aur image
+mirroring `VERCEL` par khud band ho jate hain — cards YouTube CDN se load hote hain.
+
+**Ek baat:** rate-limiter memory mein ginta hai, aur serverless par har instance ki
+apni memory hoti hai — to ginti utni sakht nahi rehti jitni ek server par. Password
+24 random characters ka hai, is liye amli tor par farq nahi parta.
