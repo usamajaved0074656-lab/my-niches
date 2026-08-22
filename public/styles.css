@@ -649,3 +649,16 @@ button, input, select, textarea { font: inherit; color: inherit; }
   }
   .sidebar.open { transform: none; box-shadow: 0 0 40px rgba(0, 0, 0, .7); }
 }
+
+/* A channel YouTube took down. Dimmed rather than hidden — the notes on it are
+   still worth reading, and the thumbnails are still worth learning from. */
+.card.is-gone { opacity: .72; }
+.card.is-gone .card-banner img,
+.card.is-gone .vid-thumb img,
+.card.is-gone .head-av img { filter: grayscale(1); }
+.gone-flag {
+  display: block; padding: 5px 14px; font-size: 11px; font-weight: 700;
+  letter-spacing: .04em; text-transform: uppercase;
+  color: #ffb3b3; background: rgba(255, 93, 93, .12);
+  border-bottom: 1px solid rgba(255, 93, 93, .3);
+}

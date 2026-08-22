@@ -99,7 +99,7 @@ function build(target) {
   el.id = ID;
   // Icon only — a labelled pill overflows YouTube's action row and wraps to its own line.
   el.innerHTML = `
-    <button class="nc-btn" id="nc-btn" title="My Niches mein save karo" aria-label="My Niches mein save karo">${SVG.plus}</button>`;
+    <button class="nc-btn" id="nc-btn" title="Save to My Niches" aria-label="Save to My Niches">${SVG.plus}</button>`;
   el.querySelector('#nc-btn').onclick = (e) => {
     e.preventDefault();
     e.stopPropagation();

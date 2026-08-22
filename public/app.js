@@ -381,6 +381,11 @@ function allChannels() {
   return state.niches.flatMap((n) => (n.channels || []).map((c) => ({ ch: c, niche: n })));
 }
 
+/** Taken down by YouTube. Kept, but out of the way of the working library. */
+const isGone = (r) => !!r.ch.removed;
+const liveChannels = () => allChannels().filter((r) => !isGone(r));
+const goneChannels = () => allChannels().filter(isGone);
+
 function matches({ ch, niche }, q) {
   if (!q) return true;
   const hay = [
@@ -391,8 +396,10 @@ function matches({ ch, niche }, q) {
 }
 
 function visible() {
-  let rows = allChannels().filter((r) => matches(r, state.q.trim().toLowerCase()));
-  if (state.filter !== 'all') rows = rows.filter((r) => r.niche.id === state.filter);
+  const gone = state.filter === 'removed';
+  let rows = allChannels().filter((r) => isGone(r) === gone);
+  rows = rows.filter((r) => matches(r, state.q.trim().toLowerCase()));
+  if (state.filter !== 'all' && !gone) rows = rows.filter((r) => r.niche.id === state.filter);
 
   const by = {
     new: (a, b) => new Date(b.ch.addedAt || 0) - new Date(a.ch.addedAt || 0),
@@ -411,12 +418,14 @@ function visible() {
  * Saved niches surface as PINNED so the handful used daily stay at the top.
  */
 function renderSidebar() {
-  const total = allChannels().length;
+  const total = liveChannels().length;
+  const gone = goneChannels().length;
   const q = state.nicheQ.trim().toLowerCase();
   const hit = (n) => !q || n.title.toLowerCase().includes(q);
 
   const pinned = state.niches.filter((n) => n.saved && hit(n));
   const rest = state.niches.filter((n) => !n.saved && hit(n));
+  const liveCount = (n) => (n.channels || []).filter((c) => !c.removed).length;
 
   // The ⋯ sits inside the row but stops the row's own click, so tapping it
   // opens the menu instead of switching niche.
@@ -436,13 +445,17 @@ function renderSidebar() {
   if (!q) html += row('all', 'All channels', total, '#8d8d8d');
   if (pinned.length) {
     html += section('★ Pinned');
-    html += pinned.map((n) => row(n.id, n.title, (n.channels || []).length, statusOf(n).color, true)).join('');
+    html += pinned.map((n) => row(n.id, n.title, liveCount(n), statusOf(n).color, true)).join('');
   }
   if (rest.length) {
     html += section(pinned.length ? 'All niches' : 'Niches');
-    html += rest.map((n) => row(n.id, n.title, (n.channels || []).length, statusOf(n).color, true)).join('');
+    html += rest.map((n) => row(n.id, n.title, liveCount(n), statusOf(n).color, true)).join('');
   }
   if (!pinned.length && !rest.length) html += '<div class="nav-none">No niches found</div>';
+  if (gone && !q) {
+    html += section('Gone');
+    html += row('removed', 'Removed by YouTube', gone, '#ff5d5d');
+  }
 
   $('groupNav').innerHTML = html;
   $('countLabel').textContent =
@@ -469,9 +482,9 @@ function renderCtx() {
     $('pinBtn').classList.toggle('on', Boolean(n.saved));
     $('renameBtn').innerHTML = `${ICON.pencil} Rename`;
     $('ctxMore').innerHTML = ICON.dots;
-    $('gbUrl').placeholder = `YouTube link paste karo — "${n.title}" mein add ho jayega`;
+    $('gbUrl').placeholder = `Paste a YouTube link to add it to "${n.title}"`;
   } else {
-    $('ctxTitle').textContent = 'All channels';
+    $('ctxTitle').textContent = state.filter === 'removed' ? 'Removed by YouTube' : 'All channels';
     $('ctxPill').textContent = String(shown);
     $('ctxPill').style.color = 'var(--muted)';
     $('ctxPill').style.borderColor = 'var(--line-hi)';
@@ -492,8 +505,15 @@ function channelCard({ ch, niche }) {
 
   const bn = ch.banner || ch.bannerUrl;
 
-  return `<article class="card" data-cid="${esc(ch.id)}" data-nid="${esc(niche.id)}">
+  return `<article class="card${ch.removed ? ' is-gone' : ''}" data-cid="${esc(ch.id)}" data-nid="${esc(niche.id)}">
     <div class="card-banner">${bn ? pic(ch.banner, ch.bannerUrl) : ''}</div>
+    ${
+      ch.removed
+        ? `<div class="gone-flag" title="${esc(ch.removedReason || '')}">
+             Removed by YouTube${ch.removedAt ? ` · ${esc(ago(ch.removedAt))}` : ''}
+           </div>`
+        : ''
+    }
     <div class="card-head">
       ${
         av
@@ -868,7 +888,7 @@ $('chDelete').onclick = async () => {
   if (!found) return;
   const ok = await confirmDlg(
     `"${found.ch.title}" Remove this?`,
-    `"${found.niche.title}" will be removed from it, notes included. Wapas nahi aayega.`,
+    `"${found.niche.title}" will lose it, notes included. This cannot be undone.`,
     'Remove',
   );
   if (!ok) return;
