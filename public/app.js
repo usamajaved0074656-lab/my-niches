@@ -343,6 +343,28 @@ const avatarOf = (c) => safeUrl(c.avatar || c.avatarUrl || '');
 // Prefer the readable @handle URL over the /channel/UC… canonical form.
 const linkOf = (c) =>
   safeUrl(c.watchUrl || (c.handle ? `https://www.youtube.com/${c.handle}` : c.url)) || 'https://www.youtube.com/';
+/**
+ * The channel's top videos. New records carry a `videos` array with views, age
+ * and duration; channels saved before that still have parallel arrays, so they
+ * keep rendering (without the numbers) until they are refreshed.
+ */
+function videosOf(c) {
+  if (Array.isArray(c.topVideos) && c.topVideos.length) {
+    return c.topVideos.map((v, i) => ({
+      title: v.title || '',
+      views: v.views || '',
+      age: v.age || '',
+      duration: v.duration || '',
+      thumb: (c.videoThumbs || [])[i] || '',
+      thumbUrl: v.thumbUrl || (c.videoThumbUrls || [])[i] || '',
+    }));
+  }
+  const titles = c.videoTitles || [];
+  return stripOf(c).map(([thumb, thumbUrl], i) => ({
+    title: titles[i] || '', views: '', age: '', duration: '', thumb, thumbUrl,
+  }));
+}
+
 // Pairs of [localPath, remoteUrl] for the channel's latest uploads.
 const stripOf = (c) => {
   const local = c.videoThumbs || [];
@@ -463,15 +485,21 @@ function renderCtx() {
 /* ---------- render: channel cards ---------- */
 
 function channelCard({ ch, niche }) {
-  const s = statusOf(niche);
-  const strip = stripOf(ch).slice(0, 3);
-  const titles = ch.videoTitles || [];
+  const st = statusOf(niche);
+  const vids = videosOf(ch).slice(0, 3);
   const meta = [ch.handle, ch.subs, ch.videos].filter(Boolean).map(esc).join(' · ');
   const av = avatarOf(ch);
 
+  const bn = ch.banner || ch.bannerUrl;
+
   return `<article class="card" data-cid="${esc(ch.id)}" data-nid="${esc(niche.id)}">
+    <div class="card-banner">${bn ? pic(ch.banner, ch.bannerUrl) : ''}</div>
     <div class="card-head">
-      ${av ? pic(ch.avatar, ch.avatarUrl, 'head-av') : `<div class="head-av">${esc((ch.title || '?').trim().charAt(0).toUpperCase())}</div>`}
+      ${
+        av
+          ? pic(ch.avatar, ch.avatarUrl, 'head-av')
+          : `<div class="head-av">${esc((ch.title || '?').trim().charAt(0).toUpperCase())}</div>`
+      }
       <div class="who">
         <span class="who-name">
           <b>${esc(ch.title)}</b>
@@ -479,33 +507,30 @@ function channelCard({ ch, niche }) {
              title="Open on YouTube">${ICON.link}</a>
         </span>
         <span class="when">${esc(meta || '—')}</span>
+        ${ch.description ? `<span class="who-desc">${esc(ch.description)}</span>` : ''}
       </div>
       <button class="status" data-stop data-f="${esc(niche.id)}"
-        style="color:${s.color};border-color:${s.color}55;background:${s.color}1f"
+        style="color:${st.color};border-color:${st.color}55;background:${st.color}1f"
         title="Show only this niche’s channels">${esc(niche.title)}</button>
     </div>
 
     ${
-      strip.length
-        ? `<div class="cover">
-             <div class="pv-head">
-               <div class="pv-banner${ch.banner || ch.bannerUrl ? '' : ' fallback'}">
-                 ${ch.banner || ch.bannerUrl ? pic(ch.banner, ch.bannerUrl) : pic(ch.avatar, ch.avatarUrl)}
-               </div>
-               ${pic(ch.avatar, ch.avatarUrl, 'pv-face')}
-             </div>
-             <div class="pv-strip">
-               ${strip
-                 .map(
-                   ([l, r], i) => `<figure>
-                      ${pic(l, r)}
-                      <figcaption>${esc(titles[i] || '')}</figcaption>
-                    </figure>`,
-                 )
-                 .join('')}
-             </div>
+      vids.length
+        ? `<div class="vids">
+             ${vids
+               .map(
+                 (v) => `<figure class="vid">
+                    <span class="vid-thumb">
+                      ${pic(v.thumb, v.thumbUrl)}
+                      ${v.duration ? `<span class="vid-dur">${esc(v.duration)}</span>` : ''}
+                    </span>
+                    <figcaption class="vid-title">${esc(v.title)}</figcaption>
+                    <span class="vid-meta">${[v.views, v.age].filter(Boolean).map(esc).join(' · ')}</span>
+                  </figure>`,
+               )
+               .join('')}
            </div>`
-        : '<div class="cover blank">NO VIDEOS FOUND</div>'
+        : '<div class="vids empty-vids">NO VIDEOS FOUND</div>'
     }
 
     <div class="card-body">
@@ -581,20 +606,23 @@ function renderChannelDrawer() {
     .map((n) => `<option value="${esc(n.id)}"${n.id === niche.id ? ' selected' : ''}>${esc(n.title)}</option>`)
     .join('');
 
-  const strip = stripOf(ch);
-  const titles = ch.videoTitles || [];
+  const vids = videosOf(ch);
   $('chBody').innerHTML = `
     ${ch.videoTitle ? `<p class="vt">Saved video: “${esc(ch.videoTitle)}”</p>` : ''}
     ${
-      strip.length
+      vids.length
         ? `<div class="block">
-             <div class="block-head"><h3>Latest uploads</h3></div>
-             <div class="pv-strip wide">
-               ${strip
+             <div class="block-head"><h3>Top videos</h3></div>
+             <div class="vids wide">
+               ${vids
                  .map(
-                   ([l, r], i) => `<figure>
-                      ${pic(l, r)}
-                      <figcaption>${esc(titles[i] || '')}</figcaption>
+                   (v) => `<figure class="vid">
+                      <span class="vid-thumb">
+                        ${pic(v.thumb, v.thumbUrl)}
+                        ${v.duration ? `<span class="vid-dur">${esc(v.duration)}</span>` : ''}
+                      </span>
+                      <figcaption class="vid-title">${esc(v.title)}</figcaption>
+                      <span class="vid-meta">${[v.views, v.age].filter(Boolean).map(esc).join(' · ')}</span>
                     </figure>`,
                  )
                  .join('')}
