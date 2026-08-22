@@ -33,6 +33,9 @@ const ICON = {
   sliders: svg(15, '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>'),
   open: svg(15, '<path d="M14 4h6v6"/><path d="M20 4l-8 8"/><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/>'),
   close: svg(14, '<path d="M6 6l12 12M18 6L6 18"/>'),
+  pencil: svg(14, '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'),
+  trash: svg(14, '<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>'),
+  dots: svg(15, '<circle cx="5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none"/>'),
   star: svg(14, '<path d="M12 3.5l2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8-4.2-4.1 5.9-.9z"/>'),
 };
 
@@ -73,6 +76,146 @@ $('dlg').onclick = (e) => {
 $('dlgInput').onkeydown = (e) => {
   if (e.key === 'Enter') settleDlg($('dlgInput').value);
 };
+
+/* ---------- floating menu (sidebar rows, cards, context header) ---------- */
+
+let menuEl = null;
+
+function closeMenu() {
+  menuEl?.remove();
+  menuEl = null;
+}
+
+/** items: [{ label, icon?, danger?, checked?, onPick }] — a null entry is a divider. */
+function openMenu(anchor, items) {
+  closeMenu();
+  const el = document.createElement('div');
+  el.className = 'popmenu';
+  el.innerHTML = items
+    .map((it, i) =>
+      it === null
+        ? '<div class="pm-div"></div>'
+        : `<button class="pm-item${it.danger ? ' danger' : ''}${it.checked ? ' on' : ''}" data-i="${i}">
+             ${it.icon || ''}<span>${esc(it.label)}</span>
+           </button>`,
+    )
+    .join('');
+  document.body.appendChild(el);
+
+  // Anchor under the button, pulled back inside the viewport if it would spill.
+  const r = anchor.getBoundingClientRect();
+  el.style.top = `${Math.round(r.bottom + 6)}px`;
+  el.style.left = `${Math.round(Math.min(r.left, window.innerWidth - el.offsetWidth - 12))}px`;
+  if (r.bottom + el.offsetHeight > window.innerHeight - 8) {
+    el.style.top = `${Math.round(r.top - el.offsetHeight - 6)}px`;
+  }
+
+  el.onclick = (e) => {
+    const b = e.target.closest('[data-i]');
+    if (!b) return;
+    e.stopPropagation();
+    const it = items[Number(b.dataset.i)];
+    closeMenu();
+    it?.onPick?.();
+  };
+  menuEl = el;
+}
+
+document.addEventListener('click', (e) => {
+  if (menuEl && !menuEl.contains(e.target) && !e.target.closest('[data-menu]')) closeMenu();
+});
+window.addEventListener('resize', closeMenu);
+
+/* ---------- niche actions, shared by every surface ---------- */
+
+async function renameNiche(n) {
+  const name = await openDlg({
+    title: 'Niche ka naam badlo',
+    input: { value: n.title, placeholder: 'Niche ka naam' },
+    okLabel: 'Save',
+  });
+  if (name === null) return;
+  const title = name.trim();
+  if (!title || title === n.title) return;
+  n.title = title;
+  render();
+  await api(`/api/niches/${n.id}`, 'PATCH', { title });
+  toast('Naam badal gaya');
+}
+
+async function togglePin(n) {
+  n.saved = !n.saved;
+  render();
+  await api(`/api/niches/${n.id}`, 'PATCH', { saved: n.saved });
+  toast(n.saved ? `"${n.title}" pin ho gaya` : `"${n.title}" unpin ho gaya`);
+}
+
+async function deleteNicheById(id) {
+  const n = nicheById(id);
+  if (!n) return;
+  const count = (n.channels || []).length;
+  const ok = await confirmDlg(
+    `"${n.title}" delete karein?`,
+    count
+      ? `${count} channel aur unke saath sare notes bhi chale jayenge. Wapas nahi aayega.`
+      : 'Iske notes bhi chale jayenge. Wapas nahi aayega.',
+  );
+  if (!ok) return;
+  await api(`/api/niches/${n.id}`, 'DELETE');
+  state.niches = state.niches.filter((x) => x.id !== n.id);
+  if (state.filter === n.id) state.filter = 'all';
+  render();
+  toast('Niche delete ho gaya');
+}
+
+function nicheMenu(anchor, n) {
+  openMenu(anchor, [
+    { label: 'Rename', icon: ICON.pencil, onPick: () => renameNiche(n) },
+    { label: n.saved ? 'Unpin' : 'Pin to top', icon: ICON.star, onPick: () => togglePin(n) },
+    { label: 'Settings & notes', icon: ICON.note, onPick: () => openNicheDrawer(n.id) },
+    null,
+    { label: 'Delete niche', icon: ICON.trash, danger: true, onPick: () => deleteNicheById(n.id) },
+  ]);
+}
+
+/** Move one channel into another niche, straight from its card. */
+function moveMenu(anchor, ch, from) {
+  const targets = state.niches.filter((n) => n.id !== from.id);
+  openMenu(anchor, [
+    { label: 'YouTube par kholo', icon: ICON.open, onPick: () => window.open(linkOf(ch), '_blank', 'noopener') },
+    { label: 'Notes', icon: ICON.note, onPick: () => openChannelDrawer(from.id, ch.id) },
+    null,
+    ...(targets.length
+      ? targets.slice(0, 12).map((n) => ({
+          label: `→ ${n.title}`,
+          onPick: () => moveChannel(from, ch, n),
+        }))
+      : [{ label: 'Koi doosra niche nahi', onPick: () => {} }]),
+    null,
+    { label: 'Is niche se hatao', icon: ICON.trash, danger: true, onPick: () => removeChannel(from, ch) },
+  ]);
+}
+
+async function moveChannel(from, ch, to) {
+  try {
+    const moved = await api(`/api/niches/${from.id}/channels/${ch.id}/move`, 'POST', { to: to.id });
+    from.channels = from.channels.filter((c) => c.id !== ch.id);
+    to.channels = [...(to.channels || []), moved];
+    render();
+    toast(`${moved.title} → ${to.title}`);
+  } catch (e) {
+    toast(e.message, true);
+  }
+}
+
+async function removeChannel(from, ch) {
+  const ok = await confirmDlg(`"${ch.title}" hata dein?`, `"${from.title}" se nikal jayega, uske notes bhi.`, 'Remove');
+  if (!ok) return;
+  await api(`/api/niches/${from.id}/channels/${ch.id}`, 'DELETE');
+  from.channels = from.channels.filter((c) => c.id !== ch.id);
+  render();
+  toast('Channel hata diya');
+}
 
 let toastTimer;
 function toast(msg, bad = false) {
@@ -229,12 +372,17 @@ function renderSidebar() {
   const pinned = state.niches.filter((n) => n.saved && hit(n));
   const rest = state.niches.filter((n) => !n.saved && hit(n));
 
-  const row = (key, label, count, color, extra = '') =>
-    `<button class="nav-item${state.filter === key ? ' active' : ''}" data-f="${esc(key)}" title="${esc(label)}">
-       <span class="dot-sm" style="background:${color}"></span>
-       <span class="nav-name">${esc(label)}</span>
-       <span class="badge">${count}</span>${extra}
-     </button>`;
+  // The ⋯ sits inside the row but stops the row's own click, so tapping it
+  // opens the menu instead of switching niche.
+  const row = (key, label, count, color, isNiche = false) =>
+    `<div class="nav-row${state.filter === key ? ' active' : ''}">
+       <button class="nav-item" data-f="${esc(key)}" title="${esc(label)}">
+         <span class="dot-sm" style="background:${color}"></span>
+         <span class="nav-name">${esc(label)}</span>
+         <span class="badge">${count}</span>
+       </button>
+       ${isNiche ? `<button class="nav-more" data-menu data-niche="${esc(key)}" title="Rename, pin, delete">${ICON.dots}</button>` : ''}
+     </div>`;
 
   const section = (title) => `<div class="nav-sec">${esc(title)}</div>`;
 
@@ -242,11 +390,11 @@ function renderSidebar() {
   if (!q) html += row('all', 'All channels', total, '#8d8d8d');
   if (pinned.length) {
     html += section('★ Pinned');
-    html += pinned.map((n) => row(n.id, n.title, (n.channels || []).length, statusOf(n).color)).join('');
+    html += pinned.map((n) => row(n.id, n.title, (n.channels || []).length, statusOf(n).color, true)).join('');
   }
   if (rest.length) {
     html += section(pinned.length ? 'All niches' : 'Niches');
-    html += rest.map((n) => row(n.id, n.title, (n.channels || []).length, statusOf(n).color)).join('');
+    html += rest.map((n) => row(n.id, n.title, (n.channels || []).length, statusOf(n).color, true)).join('');
   }
   if (!pinned.length && !rest.length) html += '<div class="nav-none">Koi niche nahi mila</div>';
 
@@ -273,6 +421,8 @@ function renderCtx() {
     $('ctxActs').hidden = false;
     $('pinBtn').innerHTML = `${ICON.star} ${n.saved ? 'Pinned' : 'Pin'}`;
     $('pinBtn').classList.toggle('on', Boolean(n.saved));
+    $('renameBtn').innerHTML = `${ICON.pencil} Rename`;
+    $('ctxMore').innerHTML = ICON.dots;
     $('gbUrl').placeholder = `YouTube link paste karo — "${n.title}" mein add ho jayega`;
   } else {
     $('ctxTitle').textContent = 'All channels';
@@ -309,6 +459,8 @@ function channelCard({ ch, niche }) {
       <button class="status" data-stop data-f="${esc(niche.id)}"
         style="color:${s.color};border-color:${s.color}55;background:${s.color}1f"
         title="Sirf is niche ke channels dikhao">${esc(niche.title)}</button>
+      <button class="card-more" data-menu data-move="${esc(ch.id)}" data-nid="${esc(niche.id)}"
+        title="Move, notes, remove">${ICON.dots}</button>
     </div>
 
     ${
@@ -538,6 +690,23 @@ document.addEventListener('click', async (e) => {
     return;
   }
 
+  const nicheMenuBtn = e.target.closest('[data-niche]');
+  if (nicheMenuBtn) {
+    e.stopPropagation();
+    const n = nicheById(nicheMenuBtn.dataset.niche);
+    if (n) nicheMenu(nicheMenuBtn, n);
+    return;
+  }
+
+  const moveBtn = e.target.closest('[data-move]');
+  if (moveBtn) {
+    e.stopPropagation();
+    const from = nicheById(moveBtn.dataset.nid);
+    const ch = (from?.channels || []).find((c) => c.id === moveBtn.dataset.move);
+    if (from && ch) moveMenu(moveBtn, ch, from);
+    return;
+  }
+
   const note = e.target.closest('[data-note]');
   if (note) {
     e.stopPropagation();
@@ -649,15 +818,19 @@ $('chDelete').onclick = async () => {
 };
 
 /* niche settings */
-$('gbSettings').onclick = () => openNicheDrawer(state.filter);
-
-$('pinBtn').onclick = async () => {
+$('pinBtn').onclick = () => {
   const n = nicheById(state.filter);
-  if (!n) return;
-  n.saved = !n.saved;
-  render();
-  await api(`/api/niches/${n.id}`, 'PATCH', { saved: n.saved });
-  toast(n.saved ? `"${n.title}" upar pin ho gaya` : `"${n.title}" unpin ho gaya`);
+  if (n) togglePin(n);
+};
+
+$('renameBtn').onclick = () => {
+  const n = nicheById(state.filter);
+  if (n) renameNiche(n);
+};
+
+$('ctxMore').onclick = (e) => {
+  const n = nicheById(state.filter);
+  if (n) nicheMenu(e.currentTarget, n);
 };
 
 $('gbAddBtn').onclick = () => {
@@ -677,21 +850,9 @@ $('d_tags').oninput = (e) =>
   patchNiche({ tags: e.target.value.split(',').map((t) => t.trim()).filter(Boolean) });
 
 $('deleteNiche').onclick = async () => {
-  const n = nicheById(state.openNiche);
-  if (!n) return;
-  const count = (n.channels || []).length;
-  const ok = await confirmDlg(
-    `"${n.title}" delete karein?`,
-    count
-      ? `${count} channel aur unke saath sare notes bhi chale jayenge. Wapas nahi aayega.`
-      : 'Iske notes bhi chale jayenge. Wapas nahi aayega.',
-  );
-  if (!ok) return;
-  await api(`/api/niches/${n.id}`, 'DELETE');
-  state.niches = state.niches.filter((x) => x.id !== n.id);
-  if (state.filter === n.id) state.filter = 'all';
+  const id = state.openNiche;
   closeNicheDrawer();
-  toast('Niche delete ho gaya');
+  await deleteNicheById(id);
 };
 
 /* add channel into the selected niche */

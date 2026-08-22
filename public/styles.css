@@ -164,6 +164,57 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .nav::-webkit-scrollbar { width: 6px; }
 .nav::-webkit-scrollbar-thumb { background: #262626; border-radius: 3px; }
 
+/* ---------- sidebar row + its ⋯ ---------- */
+
+.nav-row { display: flex; align-items: center; border-radius: 11px; }
+.nav-row.active { background: var(--accent-soft); border: 1px solid rgba(60, 224, 28, .28); }
+.nav-row.active .nav-item { color: var(--accent); font-weight: 600; background: none; border-color: transparent; }
+.nav-row.active .badge { background: rgba(0, 0, 0, .35); color: var(--accent); }
+.nav-row:hover { background: #171717; }
+.nav-row.active:hover { background: var(--accent-soft); }
+.nav-row .nav-item { flex: 1; min-width: 0; }
+
+.nav-more {
+  flex: none; background: none; border: 0; color: var(--dim); cursor: pointer;
+  padding: 7px 8px; margin-right: 4px; border-radius: 7px;
+  opacity: 0; transition: opacity .12s;
+}
+.nav-row:hover .nav-more, .nav-row.active .nav-more { opacity: 1; }
+.nav-more:hover { background: #232323; color: var(--text); }
+.nav-more svg { display: block; }
+
+/* ---------- floating menu ---------- */
+
+.popmenu {
+  position: fixed; z-index: 80; min-width: 194px; max-height: 60vh; overflow-y: auto;
+  background: var(--panel); border: 1px solid var(--line-hi);
+  border-radius: 12px; padding: 6px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, .65);
+}
+.pm-item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  background: none; border: 0; color: var(--text); cursor: pointer;
+  padding: 9px 11px; border-radius: 8px; font-size: 13.5px; text-align: left;
+}
+.pm-item:hover { background: #1c1c1c; }
+.pm-item.danger { color: var(--danger); }
+.pm-item.danger:hover { background: rgba(255, 93, 93, .1); }
+.pm-item svg { flex: none; opacity: .8; }
+.pm-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pm-div { height: 1px; background: var(--line); margin: 5px 6px; }
+
+/* ---------- card ⋯ ---------- */
+
+.card-more {
+  flex: none; background: none; border: 0; color: var(--dim); cursor: pointer;
+  padding: 5px 4px; border-radius: 7px; margin-left: 2px;
+}
+.card:hover .card-more { color: var(--muted); }
+.card-more:hover { background: #1f1f1f; color: var(--text); }
+.card-more svg { display: block; }
+
+.mini-btn.icon-only { padding: 8px 10px; }
+
 /* ---------- context header ---------- */
 
 .ctxbar { display: flex; align-items: center; gap: 11px; padding: 18px 0 2px; }
