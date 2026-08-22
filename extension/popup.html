@@ -81,27 +81,27 @@
   <div class="banner" id="banner" hidden></div>
 
   <div id="main">
-    <input id="search" placeholder="Niche dhoondo…" />
+    <input id="search" placeholder="Find a niche…" />
     <div class="list" id="list"><div class="muted">Loading…</div></div>
   </div>
 
   <div class="off" id="off" hidden>
     <div class="ico">&#9888;</div>
-    <b>Server nahi mil raha</b>
-    <p>Jis PC par My Niches chalti hai, wahan <b>start.cmd</b> chalao. Phir:</p>
-    <button class="retry" id="retry">Dobara check karo</button>
+    <b>Cannot find the server</b>
+    <p>On the PC running My Niches, run <b>start.cmd</b>, then:</p>
+    <button class="retry" id="retry">Check again</button>
   </div>
 
   <div class="foot">
-    <button class="link" id="openApp">Library kholo</button>
+    <button class="link" id="openApp">Open library</button>
     <button class="link" id="toggleCfg">Settings</button>
   </div>
 
   <div id="cfg" hidden>
-    <label class="lbl">Server ka address</label>
+    <label class="lbl">Server address</label>
     <input id="cfgBase" placeholder="http://localhost:5173" />
-    <label class="lbl">Password (sirf hosted server ke liye)</label>
-    <input id="cfgKey" type="password" placeholder="khaali chhor do agar password nahi" />
+    <label class="lbl">Password (hosted server only)</label>
+    <input id="cfgKey" type="password" placeholder="leave blank if there is no password" />
     <button class="retry" id="cfgSave">Save</button>
   </div>
   <script src="popup.js"></script>

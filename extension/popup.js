@@ -70,7 +70,7 @@ function render(q = '') {
            </button>`;
         })
         .join('')
-    : '<div class="muted">Koi niche nahi mila.</div>';
+    : '<div class="muted">No niches found.</div>';
 
   for (const btn of $('list').querySelectorAll('.row')) {
     btn.onclick = async () => {
@@ -84,7 +84,7 @@ function render(q = '') {
         niche.channels = [...(niche.channels || []), ch];
         busyId = null;
         render($('search').value);
-        banner(`${CHECK} <b>${esc(ch.title)}</b> → "${esc(niche.title)}" mein save ho gaya`, 'ok');
+        banner(`${CHECK} <b>${esc(ch.title)}</b> → "${esc(niche.title)}" saved`, 'ok');
       } catch (e) {
         busyId = null;
         render($('search').value);
@@ -97,7 +97,7 @@ function render(q = '') {
 
 async function connect() {
   setOffline(false);
-  $('list').innerHTML = '<div class="muted">Server se connect ho raha hai…</div>';
+  $('list').innerHTML = '<div class="muted">Connecting to the server…</div>';
   try {
     niches = await send({ type: 'niches' });
     render();
@@ -125,7 +125,7 @@ $('toggleCfg').onclick = async () => {
 $('cfgSave').onclick = async () => {
   await send({ type: 'saveSettings', base: $('cfgBase').value, key: $('cfgKey').value });
   $('cfg').hidden = true;
-  banner('Settings save ho gayi', 'ok');
+  banner('Settings saved', 'ok');
   await connect();
 };
 
@@ -134,9 +134,9 @@ $('cfgSave').onclick = async () => {
   target = targetFrom(tab?.url || '');
   $('target').textContent = target
     ? `${target.label}: ${target.url.replace('https://www.youtube.com/', '')}`
-    : 'Ye YouTube ka channel/video page nahi hai.';
+    : 'This is not a YouTube channel or video page.';
   if (!target) {
-    $('list').innerHTML = '<div class="muted">Kisi channel ya video page par jao, phir yahan se save karo.</div>';
+    $('list').innerHTML = '<div class="muted">Go to a channel or video page, then save it from here.</div>';
     return;
   }
   await connect();

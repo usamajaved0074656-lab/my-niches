@@ -33,6 +33,7 @@ const ICON = {
   sliders: svg(15, '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>'),
   open: svg(15, '<path d="M14 4h6v6"/><path d="M20 4l-8 8"/><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/>'),
   close: svg(14, '<path d="M6 6l12 12M18 6L6 18"/>'),
+  refresh: svg(14, '<path d="M20 11a8 8 0 1 0-1.6 5.6"/><path d="M20 4v7h-7"/>'),
   pencil: svg(14, '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'),
   trash: svg(14, '<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>'),
   dots: svg(15, '<circle cx="5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none"/>'),
@@ -130,8 +131,8 @@ window.addEventListener('resize', closeMenu);
 
 async function renameNiche(n) {
   const name = await openDlg({
-    title: 'Niche ka naam badlo',
-    input: { value: n.title, placeholder: 'Niche ka naam' },
+    title: 'Rename niche',
+    input: { value: n.title, placeholder: 'Niche name' },
     okLabel: 'Save',
   });
   if (name === null) return;
@@ -140,14 +141,14 @@ async function renameNiche(n) {
   n.title = title;
   render();
   await api(`/api/niches/${n.id}`, 'PATCH', { title });
-  toast('Naam badal gaya');
+  toast('Renamed');
 }
 
 async function togglePin(n) {
   n.saved = !n.saved;
   render();
   await api(`/api/niches/${n.id}`, 'PATCH', { saved: n.saved });
-  toast(n.saved ? `"${n.title}" pin ho gaya` : `"${n.title}" unpin ho gaya`);
+  toast(n.saved ? `"${n.title}" pinned` : `"${n.title}" unpinned`);
 }
 
 async function deleteNicheById(id) {
@@ -155,17 +156,17 @@ async function deleteNicheById(id) {
   if (!n) return;
   const count = (n.channels || []).length;
   const ok = await confirmDlg(
-    `"${n.title}" delete karein?`,
+    `"${n.title}" Delete this?`,
     count
-      ? `${count} channel aur unke saath sare notes bhi chale jayenge. Wapas nahi aayega.`
-      : 'Iske notes bhi chale jayenge. Wapas nahi aayega.',
+      ? `${count} channels and all their notes will go too. This cannot be undone.`
+      : 'Its notes will go too. This cannot be undone.',
   );
   if (!ok) return;
   await api(`/api/niches/${n.id}`, 'DELETE');
   state.niches = state.niches.filter((x) => x.id !== n.id);
   if (state.filter === n.id) state.filter = 'all';
   render();
-  toast('Niche delete ho gaya');
+  toast('Niche deleted');
 }
 
 function nicheMenu(anchor, n) {
@@ -182,18 +183,41 @@ function nicheMenu(anchor, n) {
 function moveMenu(anchor, ch, from) {
   const targets = state.niches.filter((n) => n.id !== from.id);
   openMenu(anchor, [
-    { label: 'YouTube par kholo', icon: ICON.open, onPick: () => window.open(linkOf(ch), '_blank', 'noopener') },
+    { label: 'Open on YouTube', icon: ICON.open, onPick: () => window.open(linkOf(ch), '_blank', 'noopener') },
     { label: 'Notes', icon: ICON.note, onPick: () => openChannelDrawer(from.id, ch.id) },
+    { label: 'Refresh data', icon: ICON.refresh, onPick: () => refreshChannel(from, ch) },
     null,
     ...(targets.length
       ? targets.slice(0, 12).map((n) => ({
           label: `→ ${n.title}`,
           onPick: () => moveChannel(from, ch, n),
         }))
-      : [{ label: 'Koi doosra niche nahi', onPick: () => {} }]),
+      : [{ label: 'No other niche', onPick: () => {} }]),
     null,
-    { label: 'Is niche se hatao', icon: ICON.trash, danger: true, onPick: () => removeChannel(from, ch) },
+    { label: 'Remove from this niche', icon: ICON.trash, danger: true, onPick: () => removeChannel(from, ch) },
   ]);
+}
+
+/** Re-fetch a channel's live stats, avatar, banner and latest uploads. */
+async function refreshChannel(niche, ch, btn) {
+  if (btn?.dataset.busy) return;
+  if (btn) {
+    btn.dataset.busy = '1';
+    btn.classList.add('spinning');
+  }
+  try {
+    const fresh = await api(`/api/niches/${niche.id}/channels/${ch.id}/refresh`, 'POST');
+    const i = niche.channels.findIndex((c) => c.id === fresh.id);
+    niche.channels[i] = fresh;
+    render();
+    toast(`${fresh.title} refreshed`);
+  } catch (e) {
+    toast(e.message, true);
+    if (btn) {
+      delete btn.dataset.busy;
+      btn.classList.remove('spinning');
+    }
+  }
 }
 
 async function moveChannel(from, ch, to) {
@@ -209,12 +233,12 @@ async function moveChannel(from, ch, to) {
 }
 
 async function removeChannel(from, ch) {
-  const ok = await confirmDlg(`"${ch.title}" hata dein?`, `"${from.title}" se nikal jayega, uske notes bhi.`, 'Remove');
+  const ok = await confirmDlg(`"${ch.title}" Remove this?`, `"${from.title}" will be removed from it, notes included.`, 'Remove');
   if (!ok) return;
   await api(`/api/niches/${from.id}/channels/${ch.id}`, 'DELETE');
   from.channels = from.channels.filter((c) => c.id !== ch.id);
   render();
-  toast('Channel hata diya');
+  toast('Channel removed');
 }
 
 let toastTimer;
@@ -237,7 +261,7 @@ async function api(url, method = 'GET', body) {
   });
   const data = await r.json().catch(() => ({}));
   if (r.status === 401 && url !== '/api/login') {
-    showLock('Session khatam ho gaya — dobara password daalo.');
+    showLock('Session expired — enter your password again.');
     throw new Error('unauthorized');
   }
   if (!r.ok) throw new Error(data.error || `${method} ${url} failed`);
@@ -396,7 +420,7 @@ function renderSidebar() {
     html += section(pinned.length ? 'All niches' : 'Niches');
     html += rest.map((n) => row(n.id, n.title, (n.channels || []).length, statusOf(n).color, true)).join('');
   }
-  if (!pinned.length && !rest.length) html += '<div class="nav-none">Koi niche nahi mila</div>';
+  if (!pinned.length && !rest.length) html += '<div class="nav-none">No niches found</div>';
 
   $('groupNav').innerHTML = html;
   $('countLabel').textContent =
@@ -452,27 +476,30 @@ function channelCard({ ch, niche }) {
         <span class="who-name">
           <b>${esc(ch.title)}</b>
           <a class="pv-open" href="${esc(linkOf(ch))}" target="_blank" rel="noopener" data-stop
-             title="YouTube par kholo">${ICON.link}</a>
+             title="Open on YouTube">${ICON.link}</a>
         </span>
         <span class="when">${esc(meta || '—')}</span>
       </div>
       <button class="status" data-stop data-f="${esc(niche.id)}"
         style="color:${s.color};border-color:${s.color}55;background:${s.color}1f"
-        title="Sirf is niche ke channels dikhao">${esc(niche.title)}</button>
-      <button class="card-more" data-menu data-move="${esc(ch.id)}" data-nid="${esc(niche.id)}"
-        title="Move, notes, remove">${ICON.dots}</button>
+        title="Show only this niche’s channels">${esc(niche.title)}</button>
     </div>
 
     ${
       strip.length
         ? `<div class="cover">
-             ${pic(ch.banner, ch.bannerUrl, 'pv-banner')}
+             <div class="pv-head">
+               <div class="pv-banner${ch.banner || ch.bannerUrl ? '' : ' fallback'}">
+                 ${ch.banner || ch.bannerUrl ? pic(ch.banner, ch.bannerUrl) : pic(ch.avatar, ch.avatarUrl)}
+               </div>
+               ${pic(ch.avatar, ch.avatarUrl, 'pv-face')}
+             </div>
              <div class="pv-strip">
                ${strip
                  .map(
                    ([l, r], i) => `<figure>
                       ${pic(l, r)}
-                      ${titles[i] ? `<figcaption>${esc(titles[i])}</figcaption>` : ''}
+                      <figcaption>${esc(titles[i] || '')}</figcaption>
                     </figure>`,
                  )
                  .join('')}
@@ -483,15 +510,21 @@ function channelCard({ ch, niche }) {
 
     <div class="card-body">
       <div class="note-row">
-        <p class="note-preview${ch.notes ? '' : ' is-empty'}">${esc(ch.notes || 'Notes abhi khaali hain')}</p>
+        <p class="note-preview${ch.notes ? '' : ' is-empty'}">${esc(ch.notes || 'No notes yet')}</p>
         <button class="note-btn${ch.notes ? ' on' : ''}" data-stop data-note="${esc(ch.id)}" data-nid="${esc(niche.id)}"
-          title="${ch.notes ? 'Notes kholo' : 'Notes likho'}">${ICON.note}</button>
+          title="${ch.notes ? 'Open notes' : 'Write notes'}">${ICON.note}</button>
       </div>
       <div class="card-foot">
         <span class="chip">${ICON.play} ${esc(ago(ch.addedAt) || 'added')}</span>
         ${ch.subs ? `<span class="chip">${ICON.users} ${esc(ch.subs)}</span>` : ''}
-        <button class="save${niche.saved ? ' on' : ''}" data-stop data-save="${esc(niche.id)}"
-          title="${niche.saved ? 'Niche unpin karo' : 'Niche ko sidebar mein upar pin karo'}">${ICON.bookmark}</button>
+        <span class="foot-acts">
+          <button class="card-more" data-stop data-refresh="${esc(ch.id)}" data-nid="${esc(niche.id)}"
+            title="Re-fetch subs, videos and thumbnails">${ICON.refresh}</button>
+          <button class="card-more" data-menu data-move="${esc(ch.id)}" data-nid="${esc(niche.id)}"
+            title="Move, notes, remove">${ICON.dots}</button>
+          <button class="save${niche.saved ? ' on' : ''}" data-stop data-save="${esc(niche.id)}"
+            title="${niche.saved ? 'Unpin this niche' : 'Pin this niche to the top of the sidebar'}">${ICON.bookmark}</button>
+        </span>
       </div>
     </div>
   </article>`;
@@ -504,12 +537,12 @@ function render() {
   $('empty').hidden = rows.length > 0;
 
   const hasAny = allChannels().length > 0;
-  $('emptyTitle').textContent = hasAny ? 'Yahan kuch nahi mila' : 'Abhi koi channel nahi hai';
+  $('emptyTitle').textContent = hasAny ? 'Nothing here' : 'No channels yet';
   $('emptyMsg').textContent = hasAny
-    ? 'Koi dusra niche ya search try karo.'
+    ? 'Try another niche or a different search.'
     : state.niches.length
-      ? 'Upar link paste kar ke pehla channel add karo.'
-      : 'Pehla niche bana kar usme channels dalna shuru karo.';
+      ? 'Paste a link above to add the first channel.'
+      : 'Create your first niche, then start adding channels to it.';
   $('addBtnEmpty').hidden = hasAny || state.niches.length > 0;
 
   for (const b of $('filtersMenu').querySelectorAll('[data-sort]')) {
@@ -539,7 +572,7 @@ function renderChannelDrawer() {
       <span class="dh-name">
         ${esc(ch.title)}
         <a class="pv-open" href="${esc(linkOf(ch))}" target="_blank" rel="noopener"
-           title="YouTube par kholo">${ICON.open}</a>
+           title="Open on YouTube">${ICON.open}</a>
       </span>
       <span class="dh-meta">${[ch.handle, ch.subs, ch.videos].filter(Boolean).map(esc).join(' · ') || '—'}</span>
     </div>`;
@@ -561,7 +594,7 @@ function renderChannelDrawer() {
                  .map(
                    ([l, r], i) => `<figure>
                       ${pic(l, r)}
-                      ${titles[i] ? `<figcaption>${esc(titles[i])}</figcaption>` : ''}
+                      <figcaption>${esc(titles[i] || '')}</figcaption>
                     </figure>`,
                  )
                  .join('')}
@@ -570,9 +603,9 @@ function renderChannelDrawer() {
         : ''
     }
     <div class="block">
-      <div class="block-head"><h3>Is channel ke notes</h3></div>
+      <div class="block-head"><h3>Notes for this channel</h3></div>
       <textarea id="chNotes" class="notes-area" rows="10"
-        placeholder="Hook style, thumbnail pattern, kya copy karna hai…">${esc(ch.notes || '')}</textarea>
+        placeholder="Hook style, thumbnail pattern, what to copy…">${esc(ch.notes || '')}</textarea>
     </div>
     ${ch.description ? `<p class="muted small">${esc(ch.description.slice(0, 400))}</p>` : ''}`;
 
@@ -698,6 +731,15 @@ document.addEventListener('click', async (e) => {
     return;
   }
 
+  const refreshBtn = e.target.closest('[data-refresh]');
+  if (refreshBtn) {
+    e.stopPropagation();
+    const n = nicheById(refreshBtn.dataset.nid);
+    const c = (n?.channels || []).find((x) => x.id === refreshBtn.dataset.refresh);
+    if (n && c) refreshChannel(n, c, refreshBtn);
+    return;
+  }
+
   const moveBtn = e.target.closest('[data-move]');
   if (moveBtn) {
     e.stopPropagation();
@@ -788,33 +830,24 @@ $('chRefresh').onclick = async () => {
   if (!found) return;
   $('chRefresh').disabled = true;
   $('chRefresh').textContent = 'Refreshing…';
-  try {
-    const fresh = await api(`/api/niches/${found.niche.id}/channels/${found.ch.id}/refresh`, 'POST');
-    const i = found.niche.channels.findIndex((c) => c.id === fresh.id);
-    found.niche.channels[i] = fresh;
-    render();
-    toast(`${fresh.title} refresh ho gaya`);
-  } catch (err) {
-    toast(err.message, true);
-  } finally {
-    $('chRefresh').disabled = false;
-    $('chRefresh').textContent = 'Refresh stats';
-  }
+  await refreshChannel(found.niche, found.ch);
+  $('chRefresh').disabled = false;
+  $('chRefresh').textContent = 'Refresh stats';
 };
 
 $('chDelete').onclick = async () => {
   const found = openChannel();
   if (!found) return;
   const ok = await confirmDlg(
-    `"${found.ch.title}" hata dein?`,
-    `"${found.niche.title}" se nikal jayega, uske notes bhi. Wapas nahi aayega.`,
+    `"${found.ch.title}" Remove this?`,
+    `"${found.niche.title}" will be removed from it, notes included. Wapas nahi aayega.`,
     'Remove',
   );
   if (!ok) return;
   await api(`/api/niches/${found.niche.id}/channels/${found.ch.id}`, 'DELETE');
   found.niche.channels = found.niche.channels.filter((c) => c.id !== found.ch.id);
   closeChannelDrawer();
-  toast('Channel hata diya');
+  toast('Channel removed');
 };
 
 /* niche settings */
@@ -867,7 +900,7 @@ $('gbAdd').onsubmit = async (e) => {
   try {
     const ch = await api(`/api/niches/${n.id}/channels`, 'POST', { url });
     if (ch.duplicate) {
-      $('gbErr').textContent = `"${ch.title}" is niche mein pehle se hai.`;
+      $('gbErr').textContent = `"${ch.title}" is already in this niche.`;
       $('gbErr').hidden = false;
       return;
     }
@@ -875,7 +908,7 @@ $('gbAdd').onsubmit = async (e) => {
     $('gbUrl').value = '';
     $('gbAdd').hidden = true;
     render();
-    toast(`${ch.title} add ho gaya`);
+    toast(`${ch.title} added`);
   } catch (err) {
     $('gbErr').textContent = err.message;
     $('gbErr').hidden = false;
@@ -886,12 +919,12 @@ $('gbAdd').onsubmit = async (e) => {
 };
 
 async function addNiche() {
-  const title = await ask('Naya niche', 'e.g. AI Wildlife Docs');
+  const title = await ask('New niche', 'e.g. AI Wildlife Docs');
   if (title === null) return;
   const n = await api('/api/niches', 'POST', { title: title.trim() || 'Untitled niche' });
   // Server reuses an existing niche when the name matches — don't list it twice.
   if (!nicheById(n.id)) state.niches.unshift(n);
-  else toast(`"${n.title}" pehle se hai — wahi khol diya`);
+  else toast(`"${n.title}" already exists — opened it`);
   state.filter = n.id;
   render();
   $('gbAdd').hidden = false;
@@ -944,7 +977,7 @@ $('exportBtn').onclick = () => {
   a.download = `my-niches-backup-${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
   URL.revokeObjectURL(a.href);
-  toast(`${state.niches.length} niches export ho gaye`);
+  toast(`${state.niches.length} niches exported`);
 };
 
 $('importBtn').onclick = () => $('importFile').click();
@@ -955,7 +988,7 @@ $('importFile').onchange = async (e) => {
   try {
     const res = await api('/api/import', 'POST', JSON.parse(await file.text()));
     await load();
-    toast(`${res.added} niches import hue${res.skipped ? `, ${res.skipped} pehle se maujood the` : ''}`);
+    toast(`${res.added} niches imported${res.skipped ? `, ${res.skipped} already existed` : ''}`);
   } catch (err) {
     toast(err.message, true);
   }
@@ -979,7 +1012,7 @@ async function syncNow() {
     if (JSON.stringify(rows) === JSON.stringify(state.niches)) return;
     state.niches = rows;
     render();
-    toast('Naya data aa gaya');
+    toast('New data arrived');
   } catch {
     /* server ya net down — agle tick par phir koshish */
   }
@@ -1001,7 +1034,7 @@ function showLock(msg) {
 $('lockForm').onsubmit = async (e) => {
   e.preventDefault();
   $('lockBtn').disabled = true;
-  $('lockBtn').textContent = 'Check ho raha…';
+  $('lockBtn').textContent = 'Checking…';
   try {
     await api('/api/login', 'POST', { password: $('lockPass').value });
     $('lock').hidden = true;
@@ -1011,7 +1044,7 @@ $('lockForm').onsubmit = async (e) => {
     showLock(err.message);
   } finally {
     $('lockBtn').disabled = false;
-    $('lockBtn').textContent = 'Kholo';
+    $('lockBtn').textContent = 'Unlock';
   }
 };
 

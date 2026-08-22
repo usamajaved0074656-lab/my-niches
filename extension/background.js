@@ -31,7 +31,7 @@ async function call(path, method = 'GET', body) {
   if (body) headers['Content-Type'] = 'application/json';
   if (key) {
     if (!keyAllowed(base)) {
-      throw new Error('Password sirf https ya localhost par bheja ja sakta hai — server ka address theek karo.');
+      throw new Error('The password can only be sent over https or to localhost — fix the server address.');
     }
     headers['x-app-key'] = key; // hosted server ka password
   }
@@ -45,12 +45,12 @@ async function call(path, method = 'GET', body) {
   } catch {
     throw new Error(
       base.includes('localhost')
-        ? 'My Niches server band hai — start.cmd chalao.'
-        : `Server se raabta nahi ho raha (${base}).`,
+        ? 'My Niches server is not running — run start.cmd.'
+        : `Cannot reach the server (${base}).`,
     );
   }
   const data = await r.json().catch(() => ({}));
-  if (r.status === 401) throw new Error('Password ghalat ya set nahi — extension settings mein daalo.');
+  if (r.status === 401) throw new Error('Password is wrong or not set — add it in the extension settings.');
   if (!r.ok) throw new Error(data.error || `${method} ${path} failed`);
   return data;
 }

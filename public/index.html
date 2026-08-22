@@ -17,7 +17,7 @@
       <p><span class="dot"></span> <em id="countLabel">0 channels</em></p>
     </div>
 
-    <input id="nicheFind" class="niche-find" type="search" placeholder="Niche dhoondo…" />
+    <input id="nicheFind" class="niche-find" type="search" placeholder="Find a niche…" />
     <nav class="nav" id="groupNav"></nav>
 
     <div class="side-foot">
@@ -33,7 +33,7 @@
       <button class="menu-btn" id="menuBtn" aria-label="Niches">☰</button>
       <div class="crumb">MY NICHES</div>
       <div class="topbar-right">
-        <input id="search" class="search" type="search" placeholder="Search channel, niche, tag, notes…" />
+        <input id="search" class="search" type="search" placeholder="Search channels, niches, tags, notes…" />
         <div class="filters-wrap">
           <button class="mini-btn" id="filtersBtn">Sort <span id="filtersIcon"></span></button>
           <div class="filters-menu" id="filtersMenu" hidden>
@@ -55,15 +55,15 @@
       <span class="spacer"></span>
       <div class="ctx-acts" id="ctxActs" hidden>
         <button class="mini-btn" id="gbAddBtn">+ Add channel</button>
-        <button class="mini-btn" id="renameBtn" title="Naam badlo"></button>
-        <button class="mini-btn" id="pinBtn" title="Sidebar mein upar rakho"></button>
-        <button class="mini-btn icon-only" id="ctxMore" title="Aur options"></button>
+        <button class="mini-btn" id="renameBtn" title="Rename"></button>
+        <button class="mini-btn" id="pinBtn" title="Keep at the top of the sidebar"></button>
+        <button class="mini-btn icon-only" id="ctxMore" title="More options"></button>
       </div>
     </div>
 
     <!-- Add-channel row, opened from the context header -->
     <form class="gb-add" id="gbAdd" hidden>
-      <input id="gbUrl" placeholder="YouTube channel ya video link paste karo" />
+      <input id="gbUrl" placeholder="Paste a YouTube channel or video link" />
       <button class="btn-primary" type="submit" id="gbBtn">Add channel</button>
       <button type="button" class="btn-ghost" id="gbCancel">Cancel</button>
     </form>
@@ -73,9 +73,9 @@
 
     <div class="empty" id="empty" hidden>
       <div class="icon" id="emptyIcon"></div>
-      <h3 id="emptyTitle">Abhi koi channel nahi hai</h3>
-      <p id="emptyMsg">Pehla niche bana kar usme channels dalna shuru karo.</p>
-      <button class="btn-primary" id="addBtnEmpty">+ Naya niche</button>
+      <h3 id="emptyTitle">No channels yet</h3>
+      <p id="emptyMsg">Create your first niche, then start adding channels to it.</p>
+      <button class="btn-primary" id="addBtnEmpty">+ New niche</button>
     </div>
   </main>
 </div>
@@ -110,7 +110,7 @@
 <div class="drawer-backdrop" id="drawer" hidden>
   <aside class="drawer">
     <header class="drawer-head">
-      <input id="d_title" class="title-input" placeholder="Niche ka naam" />
+      <input id="d_title" class="title-input" placeholder="Niche name" />
       <button class="icon-btn" id="closeDrawer" aria-label="Close"></button>
     </header>
 
@@ -122,9 +122,9 @@
 
     <div class="drawer-body">
       <section class="block">
-        <div class="block-head"><h3>Niche ke notes</h3></div>
+        <div class="block-head"><h3>Niche notes</h3></div>
         <textarea id="d_notes" class="notes-area" rows="14"
-          placeholder="Kyun kaam karta hai, hook pattern, thumbnail style, script format, kya try karna hai…"></textarea>
+          placeholder="Why it works, hook pattern, thumbnail style, script format, what to try…"></textarea>
       </section>
       <p class="muted" id="d_count"></p>
     </div>
@@ -156,9 +156,9 @@
 <div class="lock" id="lock" hidden>
   <form class="lock-box" id="lockForm">
     <h1>MY <span>NICHES</span></h1>
-    <p>Aage jaane ke liye password daalo.</p>
+    <p>Enter the password to continue.</p>
     <input type="password" id="lockPass" placeholder="Password" autocomplete="current-password" />
-    <button class="btn-primary" type="submit" id="lockBtn">Kholo</button>
+    <button class="btn-primary" type="submit" id="lockBtn">Unlock</button>
     <p class="lock-err" id="lockErr" hidden></p>
   </form>
 </div>

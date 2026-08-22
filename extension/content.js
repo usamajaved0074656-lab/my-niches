@@ -47,13 +47,13 @@ const SVG = {
 function pageTarget() {
   const u = new URL(location.href);
   if (u.pathname === '/watch' && u.searchParams.get('v')) {
-    return { url: `https://www.youtube.com/watch?v=${u.searchParams.get('v')}`, label: 'ye video + channel' };
+    return { url: `https://www.youtube.com/watch?v=${u.searchParams.get('v')}`, label: 'this video + channel' };
   }
   if (u.pathname.startsWith('/shorts/')) {
-    return { url: `https://www.youtube.com${u.pathname.split('/').slice(0, 3).join('/')}`, label: 'ye short + channel' };
+    return { url: `https://www.youtube.com${u.pathname.split('/').slice(0, 3).join('/')}`, label: 'this short + channel' };
   }
   const ch = /^\/(@[^/]+|channel\/[^/]+|c\/[^/]+|user\/[^/]+)/.exec(u.pathname);
-  if (ch) return { url: `https://www.youtube.com/${ch[1]}`, label: 'ye channel' };
+  if (ch) return { url: `https://www.youtube.com/${ch[1]}`, label: 'this channel' };
   return null;
 }
 
@@ -121,11 +121,11 @@ function build(target) {
 
     <div id="nc-main">
       <textarea class="nc-note" id="nc-note" rows="2"
-        placeholder="Kyun save kar rahe ho? hook, thumbnail style, format…"></textarea>
-      <input class="nc-search" id="nc-search" placeholder="Niche dhoondo…" />
+        placeholder="Why are you saving this? hook, thumbnail style, format…"></textarea>
+      <input class="nc-search" id="nc-search" placeholder="Find a niche…" />
       <div class="nc-list" id="nc-list"></div>
       <form class="nc-new" id="nc-new">
-        <input id="nc-new-title" placeholder="+ Naya niche" />
+        <input id="nc-new-title" placeholder="+ New niche" />
         <select id="nc-new-status">${statusOptions('Researching')}</select>
         <button type="submit" id="nc-new-btn">Add</button>
       </form>
@@ -133,9 +133,9 @@ function build(target) {
 
     <div class="nc-off" id="nc-off" hidden>
       <div class="nc-off-ico">${SVG.alert}</div>
-      <b>Server nahi mil raha</b>
-      <p>Jis PC par My Niches chalti hai, wahan <b>start.cmd</b> chalao.<br/>Phir yahan wapas aa kar:</p>
-      <button class="nc-retry" id="nc-retry">Dobara check karo</button>
+      <b>Cannot find the server</b>
+      <p>On the PC running My Niches, run <b>start.cmd</b> <br/>Then come back here:</p>
+      <button class="nc-retry" id="nc-retry">Check again</button>
     </div>`;
   document.documentElement.appendChild(panelEl);
 
@@ -226,7 +226,7 @@ function flashButton() {
 
 async function connect(target) {
   setOffline(false);
-  panelEl.querySelector('#nc-list').innerHTML = '<div class="nc-muted nc-loading">Server se connect ho raha hai…</div>';
+  panelEl.querySelector('#nc-list').innerHTML = '<div class="nc-muted nc-loading">Connecting to the server…</div>';
   try {
     niches = await send({ type: 'niches' });
     renderList(target, panelEl.querySelector('#nc-search')?.value || '');
@@ -252,7 +252,7 @@ function renderList(target, q) {
   const term = (q || '').trim().toLowerCase();
   const rows = niches.filter((n) => !term || n.title.toLowerCase().includes(term));
   if (!rows.length) {
-    list.innerHTML = '<div class="nc-muted">Kuch nahi mila — neeche naya bana lo.</div>';
+    list.innerHTML = '<div class="nc-muted">Nothing found — create a new one below.</div>';
     return;
   }
   list.innerHTML = rows
@@ -297,7 +297,7 @@ async function saveInto(niche, target) {
       if (notes) await send({ type: 'note', nicheId: niche.id, chId: ch.id, notes });
       renderList(target, panelEl.querySelector('#nc-search')?.value || '');
       return banner(
-        `<b>${esc(ch.title)}</b> is niche mein pehle se hai${notes ? ' — note laga diya' : ''}`,
+        `<b>${esc(ch.title)}</b> is already in this niche${notes ? ' — note attached' : ''}`,
         notes ? 'ok' : 'bad',
       );
     }
@@ -306,7 +306,7 @@ async function saveInto(niche, target) {
     renderList(target, panelEl.querySelector('#nc-search')?.value || '');
     noteDrafts.delete(target.url);
     if (panelEl.querySelector('#nc-note')) panelEl.querySelector('#nc-note').value = '';
-    banner(`${SVG.check} <b>${esc(ch.title)}</b> &nbsp;→&nbsp; "${esc(niche.title)}" mein save ho gaya`, 'ok');
+    banner(`${SVG.check} <b>${esc(ch.title)}</b> &nbsp;→&nbsp; "${esc(niche.title)}" saved`, 'ok');
     flashButton();
   } catch (e) {
     busyId = null;

@@ -26,5 +26,5 @@ server.on('clientError', (_e, socket) => {
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`My Niches  →  http://localhost:${PORT}`);
   console.log(`Storage     →  ${store.kind}  (${store.label})`);
-  console.log(`Password    →  ${passwordSet() ? 'on' : 'OFF (koi bhi khol sakta hai)'}`);
+  console.log(`Password    →  ${passwordSet() ? 'on' : 'OFF (anyone can open it)'}`);
 });
