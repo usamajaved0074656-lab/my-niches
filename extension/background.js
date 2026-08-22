@@ -59,7 +59,8 @@ const HANDLERS = {
   ping: () => call('/api/config'),
   niches: () => call('/api/niches'),
   create: ({ title, status }) => call('/api/niches', 'POST', { title, status }),
-  add: ({ nicheId, url }) => call(`/api/niches/${nicheId}/channels`, 'POST', { url }),
+  add: ({ nicheId, url, notes }) => call(`/api/niches/${nicheId}/channels`, 'POST', { url, notes }),
+  note: ({ nicheId, chId, notes }) => call(`/api/niches/${nicheId}/channels/${chId}`, 'PATCH', { notes }),
   saveSettings: async ({ base, key }) => {
     await chrome.storage.local.set({ apiBase: (base || DEFAULT_API).trim(), appKey: (key || '').trim() });
     return { ok: true };

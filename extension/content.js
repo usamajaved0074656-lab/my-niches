@@ -15,6 +15,9 @@ let rootEl = null;
 let panelEl = null;
 let busyId = null; // niche id currently receiving the channel
 let currentTarget = null;
+// Draft notes per page URL — tick() tears the panel down on every SPA
+// navigation, which would otherwise throw away half-typed text.
+const noteDrafts = new Map();
 
 const SUBSCRIBE_SELECTORS = [
   'yt-subscribe-button-view-model',
@@ -117,6 +120,8 @@ function build(target) {
     <div class="nc-banner" id="nc-banner" hidden></div>
 
     <div id="nc-main">
+      <textarea class="nc-note" id="nc-note" rows="2"
+        placeholder="Kyun save kar rahe ho? hook, thumbnail style, format…"></textarea>
       <input class="nc-search" id="nc-search" placeholder="Niche dhoondo…" />
       <div class="nc-list" id="nc-list"></div>
       <form class="nc-new" id="nc-new">
@@ -133,6 +138,10 @@ function build(target) {
       <button class="nc-retry" id="nc-retry">Dobara check karo</button>
     </div>`;
   document.documentElement.appendChild(panelEl);
+
+  const noteBox = panelEl.querySelector('#nc-note');
+  noteBox.value = noteDrafts.get(target.url) || '';
+  noteBox.oninput = () => noteDrafts.set(target.url, noteBox.value);
 
   panelEl.querySelector('#nc-close').onclick = () => togglePanel(target, false);
   panelEl.querySelector('#nc-retry').onclick = () => connect(target);
@@ -277,13 +286,26 @@ function sameTarget(channel, url) {
 async function saveInto(niche, target) {
   if (!niche || busyId) return;
   busyId = niche.id;
+  const notes = (panelEl.querySelector('#nc-note')?.value || '').trim();
   panelEl.querySelector('#nc-banner').hidden = true;
   renderList(target, panelEl.querySelector('#nc-search')?.value || '');
   try {
-    const ch = await send({ type: 'add', nicheId: niche.id, url: target.url });
+    const ch = await send({ type: 'add', nicheId: niche.id, url: target.url, notes });
+    if (ch.duplicate) {
+      busyId = null;
+      // Do not throw the note away just because the channel was already there.
+      if (notes) await send({ type: 'note', nicheId: niche.id, chId: ch.id, notes });
+      renderList(target, panelEl.querySelector('#nc-search')?.value || '');
+      return banner(
+        `<b>${esc(ch.title)}</b> is niche mein pehle se hai${notes ? ' — note laga diya' : ''}`,
+        notes ? 'ok' : 'bad',
+      );
+    }
     niche.channels = [...(niche.channels || []), ch];
     busyId = null;
     renderList(target, panelEl.querySelector('#nc-search')?.value || '');
+    noteDrafts.delete(target.url);
+    if (panelEl.querySelector('#nc-note')) panelEl.querySelector('#nc-note').value = '';
     banner(`${SVG.check} <b>${esc(ch.title)}</b> &nbsp;→&nbsp; "${esc(niche.title)}" mein save ho gaya`, 'ok');
     flashButton();
   } catch (e) {

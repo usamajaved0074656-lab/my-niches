@@ -9,12 +9,15 @@
 <body>
 <div class="shell">
 
-  <aside class="sidebar">
+  <div class="side-scrim" id="sideScrim" hidden></div>
+
+  <aside class="sidebar" id="sidebar">
     <div class="brand">
       <h1>MY <span>NICHES</span></h1>
       <p><span class="dot"></span> <em id="countLabel">0 channels</em></p>
     </div>
 
+    <input id="nicheFind" class="niche-find" type="search" placeholder="Niche dhoondo…" />
     <nav class="nav" id="groupNav"></nav>
 
     <div class="side-foot">
@@ -27,37 +30,42 @@
 
   <main class="main">
     <header class="topbar">
+      <button class="menu-btn" id="menuBtn" aria-label="Niches">☰</button>
       <div class="crumb">MY NICHES</div>
       <div class="topbar-right">
         <input id="search" class="search" type="search" placeholder="Search channel, niche, tag, notes…" />
+        <div class="filters-wrap">
+          <button class="mini-btn" id="filtersBtn">Sort <span id="filtersIcon"></span></button>
+          <div class="filters-menu" id="filtersMenu" hidden>
+            <h4>Sort by</h4>
+            <button data-sort="new">Newest added <span class="tick">✓</span></button>
+            <button data-sort="old">Oldest added <span class="tick">✓</span></button>
+            <button data-sort="subs">Most subscribers <span class="tick">✓</span></button>
+            <button data-sort="title">A–Z <span class="tick">✓</span></button>
+          </div>
+        </div>
         <button class="btn-primary" id="addBtn">+ New niche</button>
       </div>
     </header>
 
-    <div class="filterbar">
-      <div class="pills" id="pills"></div>
-      <div class="filters-wrap">
-        <button class="filters-btn" id="filtersBtn">Filters <span id="filtersIcon"></span></button>
-        <div class="filters-menu" id="filtersMenu" hidden>
-          <h4>Sort by</h4>
-          <button data-sort="new">Newest added <span class="tick">✓</span></button>
-          <button data-sort="old">Oldest added <span class="tick">✓</span></button>
-          <button data-sort="subs">Most subscribers <span class="tick">✓</span></button>
-          <button data-sort="title">A–Z <span class="tick">✓</span></button>
-        </div>
+    <!-- Context header: what is being shown, and what can be done to it -->
+    <div class="ctxbar" id="ctxbar">
+      <h2 id="ctxTitle">All channels</h2>
+      <span class="ctx-pill" id="ctxPill"></span>
+      <span class="spacer"></span>
+      <div class="ctx-acts" id="ctxActs" hidden>
+        <button class="mini-btn" id="pinBtn" title="Sidebar mein upar rakho"></button>
+        <button class="mini-btn" id="gbAddBtn">+ Add channel</button>
+        <button class="mini-btn" id="gbSettings">Settings</button>
       </div>
     </div>
 
-    <!-- Shown only when one niche is selected -->
-    <div class="groupbar" id="groupbar" hidden>
-      <span class="gb-dot" id="gbDot"></span>
-      <span class="gb-title" id="gbTitle"></span>
-      <form class="gb-add" id="gbAdd">
-        <input id="gbUrl" placeholder="YouTube channel ya video link paste karo — is niche mein add ho jayega" />
-        <button class="btn-primary" type="submit" id="gbBtn">Add channel</button>
-      </form>
-      <button class="btn-ghost" id="gbSettings">Niche settings</button>
-    </div>
+    <!-- Add-channel row, opened from the context header -->
+    <form class="gb-add" id="gbAdd" hidden>
+      <input id="gbUrl" placeholder="YouTube channel ya video link paste karo" />
+      <button class="btn-primary" type="submit" id="gbBtn">Add channel</button>
+      <button type="button" class="btn-ghost" id="gbCancel">Cancel</button>
+    </form>
     <p class="err" id="gbErr" hidden></p>
 
     <section class="grid" id="grid"></section>

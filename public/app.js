@@ -13,7 +13,7 @@ const esc = (s) =>
  * The grid shows one card per CHANNEL. `filter` picks which niche ("group") to
  * show: 'all', 'saved', or a niche id.
  */
-const state = { niches: [], filter: 'all', q: '', sort: 'new', openNiche: null, openCh: null };
+const state = { niches: [], filter: 'all', q: '', nicheQ: '', sort: 'new', openNiche: null, openCh: null };
 
 /* ---------- icons (emoji render as tofu boxes on some Windows fonts) ---------- */
 
@@ -33,6 +33,7 @@ const ICON = {
   sliders: svg(15, '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>'),
   open: svg(15, '<path d="M14 4h6v6"/><path d="M20 4l-8 8"/><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/>'),
   close: svg(14, '<path d="M6 6l12 12M18 6L6 18"/>'),
+  star: svg(14, '<path d="M12 3.5l2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8-4.2-4.1 5.9-.9z"/>'),
 };
 
 /* ---------- in-app dialogs (no native prompt/confirm) ---------- */
@@ -202,8 +203,7 @@ function matches({ ch, niche }, q) {
 
 function visible() {
   let rows = allChannels().filter((r) => matches(r, state.q.trim().toLowerCase()));
-  if (state.filter === 'saved') rows = rows.filter((r) => r.niche.saved);
-  else if (state.filter !== 'all') rows = rows.filter((r) => r.niche.id === state.filter);
+  if (state.filter !== 'all') rows = rows.filter((r) => r.niche.id === state.filter);
 
   const by = {
     new: (a, b) => new Date(b.ch.addedAt || 0) - new Date(a.ch.addedAt || 0),
@@ -216,51 +216,73 @@ function visible() {
 
 /* ---------- render: filters ---------- */
 
-function renderFilters() {
+/**
+ * Sidebar is the only navigation now — the pills row said exactly the same thing
+ * and cost three rows of vertical space once the library passed ~20 niches.
+ * Saved niches surface as PINNED so the handful used daily stay at the top.
+ */
+function renderSidebar() {
   const total = allChannels().length;
-  const savedCount = allChannels().filter((r) => r.niche.saved).length;
+  const q = state.nicheQ.trim().toLowerCase();
+  const hit = (n) => !q || n.title.toLowerCase().includes(q);
 
-  const items = [
-    { key: 'all', label: 'All channels', count: total, icon: ICON.ring },
-    ...state.niches.map((n) => ({
-      key: n.id,
-      label: n.title,
-      count: (n.channels || []).length,
-      color: statusOf(n).color,
-    })),
-    { key: 'saved', label: 'Saved', count: savedCount, icon: ICON.bookmark },
-  ];
+  const pinned = state.niches.filter((n) => n.saved && hit(n));
+  const rest = state.niches.filter((n) => !n.saved && hit(n));
 
-  $('pills').innerHTML = items
-    .map(
-      (i) =>
-        `<button class="pill${state.filter === i.key ? ' active' : ''}" data-f="${esc(i.key)}">
-           ${esc(i.label)} <span class="n">${i.count}</span>
-         </button>`,
-    )
-    .join('');
+  const row = (key, label, count, color, extra = '') =>
+    `<button class="nav-item${state.filter === key ? ' active' : ''}" data-f="${esc(key)}" title="${esc(label)}">
+       <span class="dot-sm" style="background:${color}"></span>
+       <span class="nav-name">${esc(label)}</span>
+       <span class="badge">${count}</span>${extra}
+     </button>`;
 
-  $('groupNav').innerHTML = items
-    .map(
-      (i) =>
-        `<button class="nav-item${state.filter === i.key ? ' active' : ''}" data-f="${esc(i.key)}">
-           <span class="ico" style="color:${i.color || 'inherit'}">${i.icon || ICON.dot}</span>
-           ${esc(i.label)} <span class="badge">${i.count}</span>
-         </button>`,
-    )
-    .join('');
+  const section = (title) => `<div class="nav-sec">${esc(title)}</div>`;
 
+  let html = '';
+  if (!q) html += row('all', 'All channels', total, '#8d8d8d');
+  if (pinned.length) {
+    html += section('★ Pinned');
+    html += pinned.map((n) => row(n.id, n.title, (n.channels || []).length, statusOf(n).color)).join('');
+  }
+  if (rest.length) {
+    html += section(pinned.length ? 'All niches' : 'Niches');
+    html += rest.map((n) => row(n.id, n.title, (n.channels || []).length, statusOf(n).color)).join('');
+  }
+  if (!pinned.length && !rest.length) html += '<div class="nav-none">Koi niche nahi mila</div>';
+
+  $('groupNav').innerHTML = html;
   $('countLabel').textContent =
     `${total} channel${total === 1 ? '' : 's'} · ${state.niches.length} niche${state.niches.length === 1 ? '' : 's'}`;
 
-  // Group toolbar only makes sense with a single niche selected.
+  renderCtx();
+}
+
+/** Header above the grid: what is on screen, plus actions for it. */
+function renderCtx() {
   const n = nicheById(state.filter);
-  $('groupbar').hidden = !n;
+  const shown = visible().length;
+
   if (n) {
     const s = statusOf(n);
-    $('gbDot').style.background = s.color;
-    $('gbTitle').innerHTML = `${esc(n.title)} <span class="gb-status" style="color:${s.color}">${esc(s.label)}</span>`;
+    $('ctxTitle').textContent = n.title;
+    $('ctxPill').textContent = s.label;
+    $('ctxPill').style.color = s.color;
+    $('ctxPill').style.borderColor = `${s.color}55`;
+    $('ctxPill').style.background = `${s.color}1f`;
+    $('ctxPill').hidden = false;
+    $('ctxActs').hidden = false;
+    $('pinBtn').innerHTML = `${ICON.star} ${n.saved ? 'Pinned' : 'Pin'}`;
+    $('pinBtn').classList.toggle('on', Boolean(n.saved));
     $('gbUrl').placeholder = `YouTube link paste karo — "${n.title}" mein add ho jayega`;
+  } else {
+    $('ctxTitle').textContent = 'All channels';
+    $('ctxPill').textContent = String(shown);
+    $('ctxPill').style.color = 'var(--muted)';
+    $('ctxPill').style.borderColor = 'var(--line-hi)';
+    $('ctxPill').style.background = 'transparent';
+    $('ctxPill').hidden = false;
+    $('ctxActs').hidden = true;
+    $('gbAdd').hidden = true;
   }
 }
 
@@ -317,14 +339,14 @@ function channelCard({ ch, niche }) {
         <span class="chip">${ICON.play} ${esc(ago(ch.addedAt) || 'added')}</span>
         ${ch.subs ? `<span class="chip">${ICON.users} ${esc(ch.subs)}</span>` : ''}
         <button class="save${niche.saved ? ' on' : ''}" data-stop data-save="${esc(niche.id)}"
-          title="Poora niche save karo">${ICON.bookmark}</button>
+          title="${niche.saved ? 'Niche unpin karo' : 'Niche ko sidebar mein upar pin karo'}">${ICON.bookmark}</button>
       </div>
     </div>
   </article>`;
 }
 
 function render() {
-  renderFilters();
+  renderSidebar();
   const rows = visible();
   $('grid').innerHTML = rows.map(channelCard).join('');
   $('empty').hidden = rows.length > 0;
@@ -511,6 +533,7 @@ document.addEventListener('click', async (e) => {
   if (f) {
     e.stopPropagation();
     state.filter = f.dataset.f;
+    closeSideDrawer(); // narrow screens: picking a niche should reveal the grid
     render();
     return;
   }
@@ -566,6 +589,7 @@ $('drawer').addEventListener('click', (e) => {
 
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
+  if (!$('sideScrim').hidden) return closeSideDrawer();
   if (!$('dlg').hidden) return settleDlg(null);
   if (!$('chDrawer').hidden) return closeChannelDrawer();
   if (!$('drawer').hidden) return closeNicheDrawer();
@@ -626,6 +650,26 @@ $('chDelete').onclick = async () => {
 
 /* niche settings */
 $('gbSettings').onclick = () => openNicheDrawer(state.filter);
+
+$('pinBtn').onclick = async () => {
+  const n = nicheById(state.filter);
+  if (!n) return;
+  n.saved = !n.saved;
+  render();
+  await api(`/api/niches/${n.id}`, 'PATCH', { saved: n.saved });
+  toast(n.saved ? `"${n.title}" upar pin ho gaya` : `"${n.title}" unpin ho gaya`);
+};
+
+$('gbAddBtn').onclick = () => {
+  $('gbAdd').hidden = !$('gbAdd').hidden;
+  $('gbErr').hidden = true;
+  if (!$('gbAdd').hidden) $('gbUrl').focus();
+};
+$('gbCancel').onclick = () => {
+  $('gbAdd').hidden = true;
+  $('gbUrl').value = '';
+  $('gbErr').hidden = true;
+};
 $('d_title').oninput = (e) => patchNiche({ title: e.target.value });
 $('d_notes').oninput = (e) => patchNiche({ notes: e.target.value });
 $('d_status').onchange = (e) => patchNiche({ status: e.target.value }, true);
@@ -661,8 +705,14 @@ $('gbAdd').onsubmit = async (e) => {
   $('gbErr').hidden = true;
   try {
     const ch = await api(`/api/niches/${n.id}/channels`, 'POST', { url });
+    if (ch.duplicate) {
+      $('gbErr').textContent = `"${ch.title}" is niche mein pehle se hai.`;
+      $('gbErr').hidden = false;
+      return;
+    }
     n.channels = [...(n.channels || []), ch];
     $('gbUrl').value = '';
+    $('gbAdd').hidden = true;
     render();
     toast(`${ch.title} add ho gaya`);
   } catch (err) {
@@ -683,6 +733,7 @@ async function addNiche() {
   else toast(`"${n.title}" pehle se hai — wahi khol diya`);
   state.filter = n.id;
   render();
+  $('gbAdd').hidden = false;
   $('gbUrl').focus();
 }
 
@@ -691,6 +742,23 @@ for (const id of ['addBtn', 'addBtnSide', 'addBtnEmpty']) $(id).onclick = addNic
 $('search').oninput = (e) => {
   state.q = e.target.value;
   render();
+};
+
+/* On narrow screens the sidebar is off-canvas; ☰ slides it in. */
+const openSideDrawer = () => {
+  $('sidebar').classList.add('open');
+  $('sideScrim').hidden = false;
+};
+function closeSideDrawer() {
+  $('sidebar').classList.remove('open');
+  $('sideScrim').hidden = true;
+}
+$('menuBtn').onclick = openSideDrawer;
+$('sideScrim').onclick = closeSideDrawer;
+
+$('nicheFind').oninput = (e) => {
+  state.nicheQ = e.target.value;
+  renderSidebar();
 };
 
 $('filtersBtn').onclick = (e) => {

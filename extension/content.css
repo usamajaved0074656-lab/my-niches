@@ -62,6 +62,14 @@
 }
 .nc-x:hover { background: #1f1f1f; color: var(--nc-text); }
 
+.nc-note {
+  background: var(--nc-card); border: 1px solid var(--nc-line); color: var(--nc-text);
+  border-radius: 9px; padding: 9px 11px; outline: none; font: inherit; width: 100%;
+  resize: vertical; line-height: 1.4;
+}
+.nc-note:focus { border-color: var(--nc-accent); }
+.nc-note::placeholder { color: #6b6b6b; }
+
 .nc-search, .nc-new input, .nc-new select {
   background: var(--nc-card); border: 1px solid var(--nc-line); color: var(--nc-text);
   border-radius: 9px; padding: 9px 11px; outline: none; font: inherit; width: 100%;
