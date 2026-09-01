@@ -33,6 +33,7 @@ const ICON = {
   sliders: svg(15, '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>'),
   open: svg(15, '<path d="M14 4h6v6"/><path d="M20 4l-8 8"/><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/>'),
   close: svg(14, '<path d="M6 6l12 12M18 6L6 18"/>'),
+  copy: svg(14, '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>'),
   refresh: svg(14, '<path d="M20 11a8 8 0 1 0-1.6 5.6"/><path d="M20 4v7h-7"/>'),
   pencil: svg(14, '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'),
   trash: svg(14, '<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>'),
@@ -174,6 +175,11 @@ function nicheMenu(anchor, n) {
     { label: 'Rename', icon: ICON.pencil, onPick: () => renameNiche(n) },
     { label: n.saved ? 'Unpin' : 'Pin to top', icon: ICON.star, onPick: () => togglePin(n) },
     { label: 'Settings & notes', icon: ICON.note, onPick: () => openNicheDrawer(n.id) },
+    {
+      label: 'Copy all channel links',
+      icon: ICON.copy,
+      onPick: () => copyLinks((n.channels || []).filter((c) => !c.removed).map((ch) => ({ ch, niche: n })), n.title),
+    },
     null,
     { label: 'Delete niche', icon: ICON.trash, danger: true, onPick: () => deleteNicheById(n.id) },
   ]);
@@ -242,6 +248,36 @@ async function removeChannel(from, ch) {
 }
 
 let toastTimer;
+/**
+ * navigator.clipboard needs a secure context and a permission that can be
+ * refused; the textarea trick still works when it is, so keep both.
+ */
+async function toClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch {}
+    ta.remove();
+    return ok;
+  }
+}
+
+/** One channel link per line, ready to paste into a sheet. */
+async function copyLinks(rows, what) {
+  const links = [...new Set(rows.map((r) => linkOf(r.ch)))];
+  if (!links.length) return toast('Nothing here to copy', true);
+  const ok = await toClipboard(links.join('\n'));
+  toast(ok ? `${links.length} link${links.length === 1 ? '' : 's'} copied — ${what}` : 'Could not copy to clipboard', !ok);
+}
+
 function toast(msg, bad = false) {
   const t = $('toast');
   t.textContent = msg;
@@ -908,6 +944,9 @@ $('renameBtn').onclick = () => {
   const n = nicheById(state.filter);
   if (n) renameNiche(n);
 };
+
+$('copyBtn').innerHTML = `${ICON.copy} Copy links`;
+$('copyBtn').onclick = () => copyLinks(visible(), $('ctxTitle').textContent);
 
 $('ctxMore').onclick = (e) => {
   const n = nicheById(state.filter);
