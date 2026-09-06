@@ -5,7 +5,7 @@ Apni niche library — har niche ek folder, andar jitne marzi YouTube channels. 
 ## Chalao
 
 ```bash
-node C:\Users\Bjay\Documents\niche-core\server.js
+node D:\Claude\apps\niche-core\server.js
 ```
 
 Phir browser mein: http://localhost:5173
@@ -54,7 +54,7 @@ YouTube browse karte hue seedha library mein save karne ke liye — Nexlev ke sw
 2. upar dayein **Developer mode** on karo
 3. **Load unpacked** → ye folder chuno:
    ```
-   C:\Users\Bjay\Documents\niche-core\extension
+   D:\Claude\apps\niche-core\extension
    ```
 
 Bas. Ab kisi bhi YouTube channel ya video page par hara **+ My Niches** button aayega — Subscribe button ke bilkul saath.

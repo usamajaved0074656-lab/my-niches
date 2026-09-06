@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "My Niches",
   "version": "1.0.0",
-  "description": "YouTube browse karte hue channels seedha apni My Niches library mein save karo.",
+  "description": "Save YouTube channels straight into your My Niches library while you browse.",
   "permissions": ["storage"],
   "host_permissions": ["http://localhost:5173/*", "http://localhost/*", "https://*/*"],
   "background": {
