@@ -26,10 +26,12 @@ function sameSecret(a, b) {
   return crypto.timingSafeEqual(ha, hb);
 }
 
-// Bumped by logout so existing tokens stop verifying. Stateless tokens have no
-// server-side record to delete, so this epoch is the revocation handle.
-let epoch = 1;
-export const revokeAllSessions = () => (epoch += 1);
+// Part of the signed token, kept so old cookies keep verifying. Nothing bumps
+// it at runtime: one person logging out must not sign the whole team out, and
+// on serverless each instance has its own copy, so a bump would only take
+// effect on whichever instance happened to serve that request. To sign every
+// device out, change APP_PASSWORD — it is the HMAC key.
+const epoch = 1;
 
 function sign(expiry, ep = epoch) {
   return crypto
