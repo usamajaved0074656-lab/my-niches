@@ -1,12 +1,6 @@
 @echo off
-set "OUT=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\MyNiches-server.vbs"
-if exist "%OUT%" (
-  del "%OUT%"
-  echo Autostart hata diya. Server ab sirf start.cmd se chalega.
-) else (
-  echo Autostart laga hi nahi hua tha.
-)
-echo.
-echo Abhi chal raha server band karna ho to:
-echo   taskkill /F /IM node.exe
+schtasks /Delete /F /TN "MyNiches-server" >nul 2>&1
+del "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\MyNiches-server.vbs" >nul 2>&1
+echo Autostart removed.
+echo To stop the running server: end wscript.exe (the watchdog) first, then node.exe.
 pause

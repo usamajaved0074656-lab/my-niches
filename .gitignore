@@ -3,3 +3,4 @@ data/uploads/
 data/niches.json
 data/*.tmp
 node_modules/
+data/*.log
