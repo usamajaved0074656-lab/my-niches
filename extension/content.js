@@ -134,8 +134,14 @@ function build(target) {
     <div class="nc-off" id="nc-off" hidden>
       <div class="nc-off-ico">${SVG.alert}</div>
       <b>Cannot find the server</b>
-      <p>On the PC running My Niches, run <b>start.cmd</b> <br/>Then come back here:</p>
-      <button class="nc-retry" id="nc-retry">Check again</button>
+      <p>Point this at the shared library, or start the server on this PC.</p>
+      <label class="nc-off-lbl">Server address</label>
+      <input id="nc-off-base" placeholder="https://my-niches.vercel.app" />
+      <label class="nc-off-lbl">Password <span>(shared server only)</span></label>
+      <input id="nc-off-key" type="password" placeholder="leave blank if there is none" />
+      <button class="nc-retry" id="nc-off-save">Save and connect</button>
+      <button class="nc-off-link" id="nc-retry">Check again without changing anything</button>
+      <div class="nc-off-msg" id="nc-off-msg" hidden></div>
     </div>`;
   document.documentElement.appendChild(panelEl);
 
@@ -145,6 +151,42 @@ function build(target) {
 
   panelEl.querySelector('#nc-close').onclick = () => togglePanel(target, false);
   panelEl.querySelector('#nc-retry').onclick = () => connect(target);
+
+  // The panel is where the failure shows up, so it is also where it gets fixed:
+  // a teammate has no server of their own to start, only an address to point at.
+  send({ type: 'getSettings' })
+    .then((s) => {
+      const base = panelEl.querySelector('#nc-off-base');
+      const key = panelEl.querySelector('#nc-off-key');
+      if (base && !/localhost/.test(s.base || '')) base.value = s.base || '';
+      if (key) key.value = s.key || '';
+    })
+    .catch(() => {});
+
+  panelEl.querySelector('#nc-off-save').onclick = async () => {
+    const msg = panelEl.querySelector('#nc-off-msg');
+    const base = panelEl.querySelector('#nc-off-base').value.trim();
+    const key = panelEl.querySelector('#nc-off-key').value.trim();
+    if (!base) {
+      msg.textContent = 'Enter the server address first.';
+      msg.hidden = false;
+      return;
+    }
+    msg.hidden = true;
+    try {
+      await send({ type: 'saveSettings', base, key });
+      // Ask for the data here rather than leaning on connect(), which turns
+      // every failure back into "cannot find the server" — a wrong password
+      // needs to say so.
+      niches = await send({ type: 'niches' });
+      setOffline(false);
+      renderList(target, panelEl.querySelector('#nc-search')?.value || '');
+      placePanel();
+    } catch (e) {
+      msg.textContent = e.message;
+      msg.hidden = false;
+    }
+  };
   panelEl.querySelector('#nc-search').oninput = (ev) => renderList(target, ev.target.value);
   panelEl.querySelector('#nc-new').onsubmit = async (ev) => {
     ev.preventDefault();
