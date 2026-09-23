@@ -1,101 +1,196 @@
-# My Niches — Setup Instructions
+# Setup Guide for Claude
+My Niches — by Avantex (Usama javed)
 
-> Ye file Claude (ya kisi bhi AI assistant) ko paste kar do — wo poora setup kar dega.
-> Ya khud follow karo, har step simple hai.
-
-## Ye app kya hai
-
-Apni YouTube niche library — niches (groups) banao, unme channels save karo (link paste karo, naam/subs/thumbnails khud aa jate hain), notes likho. Saath mein ek Chrome extension jo YouTube par Subscribe button ke paas **+** button lagati hai — wahin se channel save ho jata hai.
-
-Data tumhare apne Supabase project mein rehta hai (free) — ya bina Supabase ke sirf local file mein. Kisi aur ka server ya account involved nahi hai.
+You are setting up My Niches for the user. Follow these steps.
 
 ---
 
-## Claude ke liye instructions
+## 1. Ask the User Which Option They Want
 
-Neeche wale steps follow karo. User se sirf wahi cheez maango jo tum khud nahi kar sakte (Supabase account/key).
+Start by asking the user which option they prefer:
 
-### Step 1 — Node.js
-
-Check karo `node -v` chalti hai (v18+). Nahi to https://nodejs.org se LTS install karwao.
-
-### Step 2 — Code extract karo
-
-Ye zip `Documents\my-niches` mein extract karo. Andar ye hona chahiye:
-`server.js`, `store.js`, `public/`, `extension/`, `schema.sql`, `.env.example`, `start.cmd`
-
-### Step 3 — Storage chuno
-
-**Option A: Sirf local (sab se asaan).** Kuch nahi karna — `.env` banao hi mat. Data `data/niches.json` mein rahega. Step 5 par jao. (Ek hi PC ho to ye kaafi hai.)
-
-**Option B: Supabase (multi-device sync ke liye).** User se karwao:
-
-1. https://supabase.com par free account → **New project** (naam kuch bhi, region qareeb wala, free tier)
-2. Dashboard → **SQL Editor** → is zip ki `schema.sql` ka poora content paste → **Run**
-3. **Project Settings → API Keys → Secret keys → New secret key** → jo `sb_secret_...` bane usay copy karo
-4. **Project Settings → Data API** se Project URL copy karo (`https://xxxx.supabase.co`)
-
-Phir `.env.example` ko copy kar ke `.env` banao aur bharo:
-
-```
-SUPABASE_URL=https://xxxx.supabase.co
-SUPABASE_KEY=sb_secret_...
-PORT=5173
-```
-
-> Secret key sirf `.env` mein rahe — kisi chat, screenshot ya git mein nahi.
-> `.gitignore` mein `.env` pehle se hai.
-
-### Step 4 — (Sirf Option B) Purana local data ho to
-
-`node migrate.js` — `data/niches.json` ka data Supabase par chala jayega. Dobara chalane se duplicate nahi bante.
-
-### Step 5 — Chalao
-
-`start.cmd` double-click (ya `node server.js`). Console par ye dikhna chahiye:
-
-```
-My Niches  →  http://localhost:5173
-Storage    →  supabase (...)   ya   file (...)
-```
-
-Browser mein http://localhost:5173 khol kar verify karo. `http://localhost:5173/api/config` bhi backend confirm karta hai.
-
-### Step 6 — Chrome extension
-
-1. Chrome mein `chrome://extensions`
-2. **Developer mode** on (upar dayein)
-3. **Load unpacked** → is folder ka `extension` subfolder chuno
-
-Ab kisi YouTube channel/video page par Subscribe ke paas hara **+** button aayega. Server chalta rehna chahiye tabhi extension kaam karti hai.
-
-*Note:* Agar app is PC par chalane ke bajaye deploy ki hui hai (dekhein `DEPLOY.md`), to extension ko local server ki bilkul zaroorat nahi. YouTube page par green **+** click karo; jab panel "Cannot find the server" kahe, to wahan deployed address aur password enter karo aur "Save and connect" press kar do.
-
-### Step 7 — Autostart (recommended)
-
-Warna har PC restart par server band ho jata hai aur extension "Cannot find the server" dikhati hai.
-
-`install-autostart.cmd` chalao — ye Task Scheduler mein per-user logon task ("MyNiches-server") aur Startup-folder entry dono register karta hai, aur dono `autostart.vbs` chalate hain jo watchdog hai: har 20 seconds baad `http://localhost:5173` check karta hai aur agar response na mile to server dobara start kar deta hai (crash ya killed process khud wapas aa jata hai). Log `data/server.log` mein rehta hai. Hatana ho to `uninstall-autostart.cmd`.
-
-### Step 8 — Verify (Claude ye khud kare)
-
-- `curl http://localhost:5173/api/config` → backend sahi hai
-- App mein ek test niche bana kar ek channel link add karo → naam/subs/thumbnails aane chahiye
-- Test data delete kar do
+| Option | Best For | Requirements | Storage |
+|---|---|---|---|
+| **Option A** | Single PC, personal use | Node.js LTS, run `start.cmd` | Local file (`data/niches.json`) |
+| **Option B** | Multiple PCs syncing the same library | Node.js LTS + Free Supabase project | Supabase Postgres database |
+| **Option C** | Online team access from any device | Free Supabase + GitHub + Vercel | Supabase Postgres database |
 
 ---
 
-## Rozana istemal
+## 2. Rules for Claude During Setup
 
-- Sirf `start.cmd` chalao — server + Chrome dono khul jate hain
-- Doosre PC par bhi yehi zip + yehi `.env` = wahi library (15 sec mein sync). Agar deployed hai to aur asaan: doosra PC sirf URL khole aur password enter kare — no zip, no `.env`.
-- Backup: sidebar → Export backup (JSON file)
+### Do Every Step Yourself That You Can
+- Check the Node.js version by running `node -v` (requires Node.js 18+).
+- Create `.env` from `.env.example`.
+- Launch the server with `start.cmd` (or `node server.js`).
+- Verify the server is responding by querying `http://localhost:5173/api/config` using curl.
+- Run `install-autostart.cmd` for local setups (Options A and B).
+- Verify the app works by adding one test niche and one test channel, verifying fetched data, and deleting them.
 
-## Troubleshooting
+### Ask the User ONLY for Things You Cannot Do
+- Creating accounts on Supabase, Vercel, or GitHub.
+- Logging into external dashboards.
+- Copying private keys or project URLs from their dashboards.
 
-| Masla | Hal |
+### Security Rules (Strict)
+- **NEVER** ask the user to paste their secret key (`sb_secret_...`) or `APP_PASSWORD` into chat.
+- Instruct the user to paste credentials directly into their `.env` file or into the Vercel project settings dashboard.
+- **NEVER** commit or push `.env` to git (`.gitignore` already excludes it).
+
+---
+
+## 3. Files in This Folder
+
+- `server.js` — Core application server.
+- `start.cmd` — Quick launcher script for Windows.
+- `store.js` — Data storage layer (supports local file or Supabase).
+- `auth.js` — Password authentication and session management.
+- `lib/` — Server helper functions and request handlers.
+- `public/` — Frontend web interface files.
+- `api/` — Serverless entry point for Vercel.
+- `extension/` — Chrome browser extension.
+- `schema.sql` — PostgreSQL schema for Supabase.
+- `.env.example` — Configuration template.
+- `migrate.js` — Migration script to copy local JSON data to Supabase.
+- `install-autostart.cmd` — Windows background watchdog installer.
+- `uninstall-autostart.cmd` — Windows background watchdog uninstaller.
+- `autostart.vbs` — Background watchdog script.
+- `vercel.json` — Deployment configuration for Vercel.
+- `render.yaml` — Deployment configuration for Render.
+- `package.json` — Application metadata.
+
+---
+
+## 4. Setup Procedures
+
+### If the User Chooses Option A (One PC, No Account Needed)
+
+1. **Check Node.js:**
+   Run `node -v`. If Node.js is missing or below version 18, ask the user to download and install Node.js LTS from https://nodejs.org.
+2. **Configure Storage:**
+   Do not create a `.env` file. Data will automatically be stored in `data/niches.json`.
+3. **Start the Server:**
+   Execute `start.cmd` (or `node server.js`).
+4. **Configure Autostart:**
+   Run `install-autostart.cmd`. This registers a Windows logon task and Startup entry running `autostart.vbs`, which pings `http://localhost:5173` every 20 seconds and restarts the server if down. Output is logged to `data/server.log`. (Can be removed anytime with `uninstall-autostart.cmd`).
+5. **Verify Server:**
+   Confirm response using `curl http://localhost:5173/api/config`.
+6. Proceed to Step 5 (Test & Verification).
+
+---
+
+### If the User Chooses Option B (Several PCs on Same Library)
+
+1. **Check Node.js:**
+   Run `node -v` to ensure Node.js 18+ is available.
+2. **Guide User on Supabase Project Setup:**
+   Instruct the user to:
+   - Go to https://supabase.com and create a free account.
+   - Click **New project** and wait for it to initialize.
+   - Open **SQL Editor**, paste the entire contents of `schema.sql` from this folder, and click **Run**.
+   - Go to **Project Settings** -> **API Keys**, locate **Secret keys**, generate a new secret key (starts with `sb_secret_`), and copy it.
+   - Go to **Project Settings** -> **Data API** and copy the **Project URL** (`https://xxxx.supabase.co`).
+3. **Set Up `.env` File:**
+   - Copy `.env.example` to `.env`.
+   - Ask the user to open `.env` directly on their computer and set:
+     ```env
+     SUPABASE_URL=https://xxxx.supabase.co
+     SUPABASE_KEY=sb_secret_...
+     PORT=5173
+     ```
+   - *Do not let them paste these secrets in chat.*
+4. **Migrate Existing Local Data (if applicable):**
+   If `data/niches.json` exists from previous Option A use, run:
+   ```bash
+   node migrate.js
+   ```
+   This copies local data to Supabase. It is safe to run multiple times without creating duplicates.
+5. **Start the Server & Autostart:**
+   - Run `start.cmd`.
+   - Run `install-autostart.cmd`.
+6. **Verify Server:**
+   Confirm response using `curl http://localhost:5173/api/config`.
+7. **Multi-PC Note:**
+   Inform the user that placing the exact same `.env` file on another PC connects that PC to the same library.
+8. Proceed to Step 5 (Test & Verification).
+
+---
+
+### If the User Chooses Option C (Online for a Team)
+
+1. **Supabase Setup:**
+   Guide the user through steps 1-4 of Option B (create Supabase project, execute `schema.sql`, obtain `sb_secret_` key and Project URL).
+2. **GitHub Repository:**
+   Instruct the user to push this folder into a GitHub repository (private repository is fine).
+3. **Vercel Project Setup:**
+   Instruct the user to:
+   - Go to https://vercel.com, sign in, and click **Add New** -> **Project**.
+   - Import the GitHub repository.
+   - Select **Framework Preset**: **Other** (no build command needed).
+   - Configure Environment Variables (all three required):
+     - `SUPABASE_URL` = the Project URL
+     - `SUPABASE_KEY` = the `sb_secret_` key
+     - `APP_PASSWORD` = an application password (minimum 8 characters, 16+ recommended)
+   - *Remind the user that the app refuses to start online without `APP_PASSWORD` and without Supabase.*
+4. **Deploy & Access:**
+   - Instruct the user to click **Deploy**.
+   - Once deployed, open `https://<name>.vercel.app` and enter the `APP_PASSWORD`.
+   - Inform the user that devices stay logged in for 365 days.
+   - Explain that changing `APP_PASSWORD` in Vercel settings and redeploying logs out all devices, whereas clicking log out on a device only signs out that specific device.
+5. Proceed to Step 5 (Test & Verification).
+
+---
+
+## 5. Test & Verification
+
+Once the app is running (locally or on Vercel):
+
+1. **Check Health/Config:**
+   - Local (Options A and B): `curl http://localhost:5173/api/config` should return the storage backend.
+   - Online (Option C): use `curl https://<name>.vercel.app/api/auth` instead. It answers without the password and should return `{"required":true,"authorized":false}`. Do not use `/api/config` online: it sits behind the password and returns 401 by design, which does not mean the deploy failed.
+2. **Test Channel Fetching:**
+   - Add one test niche in the app.
+   - Add one test YouTube channel link into that niche.
+   - Verify that the app successfully fetches: channel name, avatar, banner, subscribers, video count, description, and top 3 videos by views (with thumbnails, duration, views, age).
+3. **Clean Up:**
+   Delete the test niche and test channel so the library stays clean for the user.
+
+---
+
+## 6. Chrome Extension Instructions for the User
+
+Provide these instructions to the user to complete their setup:
+
+1. Open Chrome and navigate to `chrome://extensions`.
+2. Toggle on **Developer mode** in the top right corner.
+3. Click **Load unpacked** and select the `extension` folder located inside this folder.
+4. **Connection:**
+   - For local setups (Options A and B), it automatically connects to `http://localhost:5173`.
+   - For online setups (Option C) or if it displays "Cannot find the server", open any YouTube channel, click the green **+** button, enter the **Server address** (e.g. `https://your-app.vercel.app`) and **Password** (`APP_PASSWORD`), and click **Save and connect** (these can also be accessed via extension icon -> **Settings**).
+5. **Updates:** If this project folder is updated in the future, return to `chrome://extensions` and click reload.
+
+---
+
+## 7. App Features Reference
+
+- **Create a niche:** Click the green **+ New niche** button in the sidebar.
+- **Add a channel:** Open a niche, click **+ Add channel**, and paste a YouTube channel or video link. Or click the green **+** button on YouTube with the Chrome extension.
+- **Duplicate handling:** A channel cannot be added twice to the same niche (the app alerts that it is already there).
+- **Channel card actions:** Link icon opens YouTube; refresh icon re-fetches channel data; notes button opens notes; "..." menu offers *Open on YouTube*, *Notes*, *Refresh data*, *Move to another niche*, and *Remove from this niche*.
+- **Niche menu actions:** The "..." button next to a niche in the sidebar offers *Rename*, *Pin to top*, *Settings & notes*, *Copy all channel links*, and *Delete niche*.
+- **Copy links:** The button above the cards copies every channel link visible on screen, one per line (respecting search and niche filters).
+- **Removed channels:** When refreshed, channels that YouTube removed are automatically organized into **Removed by YouTube** in the sidebar. Notes are preserved.
+- **Search & Sort:** Top search bar searches channels, niches, tags, and notes. The sort button adjusts display order.
+- **Backups:** Bottom sidebar contains **Export backup** (downloads JSON) and **Import backup**.
+
+---
+
+## 8. Troubleshooting Reference
+
+| Problem | Cause / Solution |
 |---|---|
-| Extension: "Cannot find the server" | `start.cmd` chalao |
-| Subs/naam nahi aa raha | Net check karo; YouTube kabhi kabhi rate-limit karta hai, dobara try karo |
-| Port 5173 busy | `.env` mein `PORT=5174` kar do (extension ko phir localhost:5174 chahiye hoga — `extension/manifest.json` mein `host_permissions` bhi update karo) |
-| Supabase se local par wapas | `.env` se `SUPABASE_KEY` hata do, server restart |
+| Extension says "Cannot find the server" | Start the server with `start.cmd`, or enter the server URL and password in the extension panel for online deployments. |
+| "Password is wrong or not set" | Check `APP_PASSWORD` in the extension settings. |
+| Channel name or subscribers missing | YouTube occasionally rate-limits scraping requests. Click the refresh icon on the card later. |
+| Port 5173 is already busy | Set `PORT=5174` in `.env`. Update the extension's Server address to `http://localhost:5174`. |
+| "Too many wrong attempts" | Temporary protection against password guessing. Wait 10 minutes before retrying. |
