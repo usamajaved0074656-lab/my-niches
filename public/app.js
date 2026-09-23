@@ -1144,3 +1144,144 @@ async function boot() {
 $('emptyIcon').innerHTML = ICON.compass;
 $('filtersIcon').innerHTML = ICON.sliders;
 boot().catch((e) => toast(e.message, true));
+
+/* ---------- brand integrity guard ---------- */
+
+const BRAND_TEXT = 'Avantex by Usama javed';
+const BRAND_HASH = '1832ef044f7079593a2d4b792ed90d4fdd6d9c13fd7a87ebaede046e006f1307';
+
+async function verifyBrandHash() {
+  try {
+    if (typeof crypto === 'undefined' || !crypto.subtle) return false;
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(BRAND_TEXT));
+    const hex = Array.from(new Uint8Array(buf))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+    if (hex !== BRAND_HASH) {
+      /* hash mismatch means constant was edited; keep enforcing silently */
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+let brandObserver = null;
+let docObserver = null;
+let isEnforcing = false;
+let debounceTimer = null;
+
+function enforceBrand() {
+  try {
+    const brand = document.querySelector('.brand');
+    if (!brand) return;
+
+    const detached = document.getElementById('brandBy');
+    if (detached && detached.parentElement !== brand) {
+      detached.remove();
+    }
+
+    let el = brand.querySelector('#brandBy');
+    if (!el) {
+      el = document.createElement('p');
+      el.className = 'byline';
+      el.id = 'brandBy';
+      brand.appendChild(el);
+    }
+
+    if (el.textContent !== BRAND_TEXT) {
+      el.textContent = BRAND_TEXT;
+    }
+
+    el.removeAttribute('hidden');
+    el.style.removeProperty('display');
+    el.style.removeProperty('visibility');
+    el.style.removeProperty('opacity');
+    el.style.removeProperty('font-size');
+
+    const cs = typeof window !== 'undefined' && window.getComputedStyle ? window.getComputedStyle(el) : null;
+    if (cs && (cs.display === 'none' || cs.visibility === 'hidden' || parseFloat(cs.opacity || '1') < 0.3)) {
+      el.style.setProperty('display', 'block', 'important');
+      el.style.setProperty('visibility', 'visible', 'important');
+      el.style.setProperty('opacity', '0.85', 'important');
+    }
+  } catch {
+    /* guard against runtime dom errors */
+  }
+}
+
+function attachObservers() {
+  try {
+    const brand = document.querySelector('.brand');
+    if (brand && brandObserver) {
+      brandObserver.observe(brand, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+        attributes: true,
+      });
+    }
+    if (docObserver && document.documentElement) {
+      docObserver.observe(document.documentElement, {
+        childList: true,
+        subtree: true,
+      });
+    }
+  } catch {
+    /* ignore observer attachment errors */
+  }
+}
+
+function safeEnforce() {
+  if (isEnforcing) return;
+  isEnforcing = true;
+  try {
+    brandObserver?.disconnect();
+    docObserver?.disconnect();
+    enforceBrand();
+  } catch {
+    /* guard against runtime dom errors */
+  } finally {
+    attachObservers();
+    isEnforcing = false;
+  }
+}
+
+function scheduleEnforce() {
+  if (isEnforcing) return;
+  if (debounceTimer) clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    debounceTimer = null;
+    safeEnforce();
+  }, 20);
+  safeEnforce();
+}
+
+function initBrandGuard() {
+  try {
+    verifyBrandHash();
+
+    brandObserver = new MutationObserver(() => {
+      scheduleEnforce();
+    });
+
+    docObserver = new MutationObserver(() => {
+      if (!document.querySelector('.brand #brandBy')) {
+        scheduleEnforce();
+      }
+    });
+
+    safeEnforce();
+    setInterval(safeEnforce, 2000);
+  } catch {
+    /* keep app alive if environment lacks modern dom or crypto apis */
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initBrandGuard);
+} else {
+  initBrandGuard();
+}
+

@@ -58,6 +58,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .brand h1 span { color: var(--text); }
 .brand p { margin: 5px 0 0; font-size: 11.5px; color: var(--muted); display: flex; align-items: center; gap: 7px; }
 .brand em { font-style: normal; }
+.brand .byline {
+  margin: 6px 0 0; font-size: 10.5px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--muted); opacity: .85;
+}
 
 .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
 
