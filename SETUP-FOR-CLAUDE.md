@@ -69,11 +69,13 @@ Browser mein http://localhost:5173 khol kar verify karo. `http://localhost:5173/
 
 Ab kisi YouTube channel/video page par Subscribe ke paas hara **+** button aayega. Server chalta rehna chahiye tabhi extension kaam karti hai.
 
+*Note:* Agar app is PC par chalane ke bajaye deploy ki hui hai (dekhein `DEPLOY.md`), to extension ko local server ki bilkul zaroorat nahi. YouTube page par green **+** click karo; jab panel "Cannot find the server" kahe, to wahan deployed address aur password enter karo aur "Save and connect" press kar do.
+
 ### Step 7 — Autostart (recommended)
 
-Warna har PC restart par server band ho jata hai aur extension "Server nahi mil raha" dikhati hai.
+Warna har PC restart par server band ho jata hai aur extension "Cannot find the server" dikhati hai.
 
-`install-autostart.cmd` chalao — ye Startup folder mein ek chhota launcher banata hai jo har login par server chupchap (bina window) start kar deta hai. Hatana ho to `uninstall-autostart.cmd`.
+`install-autostart.cmd` chalao — ye Task Scheduler mein per-user logon task ("MyNiches-server") aur Startup-folder entry dono register karta hai, aur dono `autostart.vbs` chalate hain jo watchdog hai: har 20 seconds baad `http://localhost:5173` check karta hai aur agar response na mile to server dobara start kar deta hai (crash ya killed process khud wapas aa jata hai). Log `data/server.log` mein rehta hai. Hatana ho to `uninstall-autostart.cmd`.
 
 ### Step 8 — Verify (Claude ye khud kare)
 
@@ -86,14 +88,14 @@ Warna har PC restart par server band ho jata hai aur extension "Server nahi mil 
 ## Rozana istemal
 
 - Sirf `start.cmd` chalao — server + Chrome dono khul jate hain
-- Doosre PC par bhi yehi zip + yehi `.env` = wahi library (15 sec mein sync)
+- Doosre PC par bhi yehi zip + yehi `.env` = wahi library (15 sec mein sync). Agar deployed hai to aur asaan: doosra PC sirf URL khole aur password enter kare — no zip, no `.env`.
 - Backup: sidebar → Export backup (JSON file)
 
 ## Troubleshooting
 
 | Masla | Hal |
 |---|---|
-| Extension: "Server nahi mil raha" | `start.cmd` chalao |
+| Extension: "Cannot find the server" | `start.cmd` chalao |
 | Subs/naam nahi aa raha | Net check karo; YouTube kabhi kabhi rate-limit karta hai, dobara try karo |
 | Port 5173 busy | `.env` mein `PORT=5174` kar do (extension ko phir localhost:5174 chahiye hoga — `extension/manifest.json` mein `host_permissions` bhi update karo) |
 | Supabase se local par wapas | `.env` se `SUPABASE_KEY` hata do, server restart |
