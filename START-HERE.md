@@ -1,6 +1,8 @@
 # Start Here
 My Niches — by Avantex (Usama javed)
 
+First time and not technical? Use [INSTALL.md](INSTALL.md) instead - it is the easy click-by-click version.
+
 Welcome to My Niches! This guide will help you get your personal YouTube niche library running in minutes.
 
 ---
