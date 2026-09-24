@@ -264,12 +264,17 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* ---------- add-channel row ---------- */
 
-.gb-add { display: flex; gap: 8px; margin-top: 12px; }
-.gb-add input {
+.gb-add { display: flex; gap: 8px; margin-top: 12px; align-items: flex-start; }
+.gb-add input,
+.gb-add textarea {
   flex: 1; background: var(--card); border: 1px solid var(--line); color: var(--text);
   border-radius: 10px; padding: 10px 13px; outline: none;
 }
-.gb-add input:focus { border-color: var(--accent); }
+.gb-add textarea {
+  resize: none; min-height: 42px; max-height: 155px; line-height: 1.45; font: inherit;
+}
+.gb-add input:focus,
+.gb-add textarea:focus { border-color: var(--accent); }
 
 .inline-lbl { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); }
 
@@ -359,12 +364,17 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .gb-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); flex: none; }
 .gb-title { font-weight: 700; font-size: 15px; }
 .gb-status { font-size: 11px; font-weight: 700; margin-left: 6px; }
-.gb-add { display: flex; gap: 8px; flex: 1; min-width: 260px; }
-.gb-add input {
-  flex: 1; background: var(--card); border: 1px solid var(--line);
+.gb-add { display: flex; gap: 8px; flex: 1; min-width: 260px; align-items: flex-start; }
+.gb-add input,
+.gb-add textarea {
+  flex: 1; background: var(--card); border: 1px solid var(--line); color: var(--text);
   border-radius: 10px; padding: 10px 13px; outline: none;
 }
-.gb-add input:focus { border-color: var(--accent); }
+.gb-add textarea {
+  resize: none; min-height: 42px; max-height: 155px; line-height: 1.45; font: inherit;
+}
+.gb-add input:focus,
+.gb-add textarea:focus { border-color: var(--accent); }
 
 .inline-lbl { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); }
 

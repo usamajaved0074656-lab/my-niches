@@ -518,7 +518,7 @@ function renderCtx() {
     $('pinBtn').classList.toggle('on', Boolean(n.saved));
     $('renameBtn').innerHTML = `${ICON.pencil} Rename`;
     $('ctxMore').innerHTML = ICON.dots;
-    $('gbUrl').placeholder = `Paste a YouTube link to add it to "${n.title}"`;
+    $('gbUrl').placeholder = `Paste one or many YouTube links to add to "${n.title}" — one per line`;
   } else {
     $('ctxTitle').textContent = state.filter === 'removed' ? 'Removed by YouTube' : 'All channels';
     $('ctxPill').textContent = String(shown);
@@ -953,15 +953,140 @@ $('ctxMore').onclick = (e) => {
   if (n) nicheMenu(e.currentTarget, n);
 };
 
+let stopRequested = false;
+
+/** Auto-grows a textarea up to CSS max-height, or resets if empty. */
+function autoGrow(el) {
+  if (!el) return;
+  if (!el.value) {
+    el.style.height = '';
+    return;
+  }
+  el.style.height = 'auto';
+  const border = el.offsetHeight - el.clientHeight;
+  el.style.height = `${el.scrollHeight + border}px`;
+}
+
+/** Extracts, normalizes and dedupes YouTube URLs and handles from text. */
+function linksFrom(text) {
+  if (!text) return [];
+  const tokens = String(text).split(/[\s,]+/);
+  const seen = new Set();
+  const result = [];
+
+  for (const raw of tokens) {
+    let t = raw.trim().replace(/^['"<(]+/, '').replace(/['">).;]+$/, '');
+    if (!t) continue;
+
+    // Bare handle token like @SomeChannel -> https://www.youtube.com/@SomeChannel
+    if (/^@[\w.-]+$/.test(t)) {
+      t = `https://www.youtube.com/${t}`;
+    }
+
+    // Add protocol if missing for youtube domains
+    if (/^(?:(?:www|m)\.)?(?:youtube\.com|youtu\.be)\//i.test(t)) {
+      t = `https://${t}`;
+    }
+
+    let url;
+    try {
+      url = new URL(t);
+    } catch {
+      continue;
+    }
+
+    const host = url.hostname.toLowerCase();
+    if (!/(^|\.)youtube\.com$/.test(host) && host !== 'youtu.be') continue;
+
+    let key = null;
+    let cleanUrl = t;
+
+    if (host === 'youtu.be') {
+      const vid = url.pathname.slice(1).split('/')[0];
+      if (vid) {
+        key = `video:${vid}`;
+        cleanUrl = t;
+      }
+    } else if (url.pathname === '/watch') {
+      const vid = url.searchParams.get('v');
+      if (vid) {
+        key = `video:${vid}`;
+        cleanUrl = t;
+      }
+    } else if (/^\/shorts\/([\w-]+)/i.test(url.pathname)) {
+      const m = url.pathname.match(/^\/shorts\/([\w-]+)/i);
+      if (m) {
+        key = `video:${m[1]}`;
+        cleanUrl = t;
+      }
+    } else if (/^\/live\/([\w-]+)/i.test(url.pathname)) {
+      const m = url.pathname.match(/^\/live\/([\w-]+)/i);
+      if (m) {
+        key = `video:${m[1]}`;
+        cleanUrl = t;
+      }
+    } else if (/^\/@[\w.-]+/i.test(url.pathname)) {
+      const m = url.pathname.match(/^\/(@[\w.-]+)/i);
+      if (m) {
+        const handle = m[1];
+        key = handle.toLowerCase();
+        cleanUrl = `${url.origin}/${handle}`;
+      }
+    } else if (/^\/channel\/(UC[\w-]+)/i.test(url.pathname)) {
+      const m = url.pathname.match(/^\/channel\/(UC[\w-]+)/i);
+      if (m) {
+        const chId = m[1];
+        key = `channel/${chId.toLowerCase()}`;
+        cleanUrl = `${url.origin}/channel/${chId}`;
+      }
+    } else if (/^\/(?:c|user)\/([\w.-]+)/i.test(url.pathname)) {
+      const m = url.pathname.match(/^\/((?:c|user)\/[\w.-]+)/i);
+      if (m) {
+        key = m[1].toLowerCase();
+        cleanUrl = `${url.origin}/${m[1]}`;
+      }
+    }
+
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    result.push(cleanUrl);
+  }
+
+  return result;
+}
+
 $('gbAddBtn').onclick = () => {
   $('gbAdd').hidden = !$('gbAdd').hidden;
   $('gbErr').hidden = true;
-  if (!$('gbAdd').hidden) $('gbUrl').focus();
+  if (!$('gbAdd').hidden) {
+    $('gbUrl').focus();
+    autoGrow($('gbUrl'));
+  }
 };
 $('gbCancel').onclick = () => {
+  stopRequested = false;
   $('gbAdd').hidden = true;
   $('gbUrl').value = '';
+  $('gbUrl').readOnly = false;
   $('gbErr').hidden = true;
+  $('gbBtn').disabled = false;
+  $('gbBtn').textContent = 'Add channel';
+  $('gbStop').hidden = true;
+  autoGrow($('gbUrl'));
+};
+$('gbStop').onclick = () => {
+  stopRequested = true;
+};
+$('gbUrl').oninput = () => {
+  autoGrow($('gbUrl'));
+  const count = linksFrom($('gbUrl').value).length;
+  $('gbBtn').textContent = count >= 2 ? `Add ${count} channels` : 'Add channel';
+};
+$('gbUrl').onkeydown = (e) => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey || (!e.shiftKey && !$('gbUrl').value.includes('\n')))) {
+    e.preventDefault();
+    if (!$('gbBtn').disabled) $('gbAdd').requestSubmit();
+  }
 };
 $('d_title').oninput = (e) => patchNiche({ title: e.target.value });
 $('d_notes').oninput = (e) => patchNiche({ notes: e.target.value });
@@ -979,29 +1104,122 @@ $('deleteNiche').onclick = async () => {
 $('gbAdd').onsubmit = async (e) => {
   e.preventDefault();
   const n = nicheById(state.filter);
-  const url = $('gbUrl').value.trim();
-  if (!n || !url) return;
-  $('gbBtn').disabled = true;
-  $('gbBtn').textContent = 'Fetching…';
-  $('gbErr').hidden = true;
-  try {
-    const ch = await api(`/api/niches/${n.id}/channels`, 'POST', { url });
-    if (ch.duplicate) {
-      $('gbErr').textContent = `"${ch.title}" is already in this niche.`;
-      $('gbErr').hidden = false;
-      return;
-    }
-    n.channels = [...(n.channels || []), ch];
-    $('gbUrl').value = '';
-    $('gbAdd').hidden = true;
-    render();
-    toast(`${ch.title} added`);
-  } catch (err) {
-    $('gbErr').textContent = err.message;
+  if (!n) return;
+
+  const links = linksFrom($('gbUrl').value);
+  if (!links.length) {
+    $('gbErr').textContent = 'No YouTube links found.';
     $('gbErr').hidden = false;
+    return;
+  }
+
+  // Exactly 1 link: keep today's behaviour exactly
+  if (links.length === 1) {
+    const url = links[0];
+    $('gbBtn').disabled = true;
+    $('gbBtn').textContent = 'Fetching…';
+    $('gbErr').hidden = true;
+    try {
+      const ch = await api(`/api/niches/${n.id}/channels`, 'POST', { url });
+      if (ch.duplicate) {
+        $('gbErr').textContent = `"${ch.title}" is already in this niche.`;
+        $('gbErr').hidden = false;
+        return;
+      }
+      n.channels = [...(n.channels || []), ch];
+      $('gbUrl').value = '';
+      autoGrow($('gbUrl'));
+      $('gbAdd').hidden = true;
+      render();
+      toast(`${ch.title} added`);
+    } catch (err) {
+      $('gbErr').textContent = err.message;
+      $('gbErr').hidden = false;
+    } finally {
+      $('gbBtn').disabled = false;
+      $('gbBtn').textContent = 'Add channel';
+    }
+    return;
+  }
+
+  // 2+ links: run sequentially to avoid rate-limiting bursts
+  $('gbBtn').disabled = true;
+  $('gbStop').hidden = false;
+  $('gbUrl').readOnly = true;
+  $('gbErr').hidden = true;
+  stopRequested = false;
+
+  let added = 0;
+  let already = 0;
+  let failed = 0;
+  const remaining = [];
+
+  try {
+    for (let i = 0; i < links.length; i++) {
+      if (stopRequested) {
+        remaining.push(...links.slice(i));
+        break;
+      }
+
+      $('gbBtn').textContent = `Adding ${i + 1} / ${links.length}…`;
+
+      try {
+        const ch = await api(`/api/niches/${n.id}/channels`, 'POST', { url: links[i] });
+        if (ch.duplicate) {
+          already += 1;
+        } else {
+          added += 1;
+          n.channels = [...(n.channels || []), ch];
+          render();
+        }
+      } catch (err) {
+        if (err.message === 'unauthorized') {
+          remaining.push(...links.slice(i));
+          break;
+        }
+        failed += 1;
+        remaining.push(links[i]);
+      }
+
+      if (stopRequested) {
+        remaining.push(...links.slice(i + 1));
+        break;
+      }
+
+      // YouTube rate-limits bursts; wait 800 ms between requests
+      if (i < links.length - 1) {
+        await new Promise((r) => setTimeout(r, 800));
+        if (stopRequested) {
+          remaining.push(...links.slice(i + 1));
+          break;
+        }
+      }
+    }
+
+    const parts = [];
+    if (added) parts.push(`${added} added`);
+    if (already) parts.push(`${already} already there`);
+    if (failed) parts.push(`${failed} failed`);
+    if (parts.length) toast(parts.join(' · '));
+
+    if (remaining.length) {
+      $('gbUrl').value = remaining.join('\n');
+      autoGrow($('gbUrl'));
+      const count = remaining.length;
+      $('gbErr').textContent = `${count} link${count === 1 ? '' : 's'} could not be added — ${count === 1 ? 'it is' : 'they are'} left in the box. Press Add to try again.`;
+      $('gbErr').hidden = false;
+    } else {
+      $('gbUrl').value = '';
+      autoGrow($('gbUrl'));
+      $('gbAdd').hidden = true;
+    }
   } finally {
     $('gbBtn').disabled = false;
-    $('gbBtn').textContent = 'Add channel';
+    const count = linksFrom($('gbUrl').value).length;
+    $('gbBtn').textContent = count >= 2 ? `Add ${count} channels` : 'Add channel';
+    $('gbStop').hidden = true;
+    $('gbUrl').readOnly = false;
+    stopRequested = false;
   }
 };
 
@@ -1016,6 +1234,7 @@ async function addNiche() {
   render();
   $('gbAdd').hidden = false;
   $('gbUrl').focus();
+  autoGrow($('gbUrl'));
 }
 
 for (const id of ['addBtn', 'addBtnSide', 'addBtnEmpty']) $(id).onclick = addNiche;

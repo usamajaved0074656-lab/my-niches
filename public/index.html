@@ -65,9 +65,10 @@
 
     <!-- Add-channel row, opened from the context header -->
     <form class="gb-add" id="gbAdd" hidden>
-      <input id="gbUrl" placeholder="Paste a YouTube channel or video link" />
+      <textarea id="gbUrl" rows="1" placeholder="Paste one or many YouTube links — one per line"></textarea>
       <button class="btn-primary" type="submit" id="gbBtn">Add channel</button>
       <button type="button" class="btn-ghost" id="gbCancel">Cancel</button>
+      <button type="button" class="btn-ghost" id="gbStop" hidden>Stop</button>
     </form>
     <p class="err" id="gbErr" hidden></p>
 
