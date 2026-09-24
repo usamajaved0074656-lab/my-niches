@@ -60,6 +60,8 @@ Bas! Channel ka naam, tasveer, subscribers aur top videos khud aa jayenge.
 
 Doosra tareeqa: app mein niche kholo, **+ Add channel** dabao, aur YouTube channel ka link paste karo.
 
+Bohot saare channels ek saath? Usi box mein saare links paste kar do, har line mein ek, aur **Add** dabao. Sab ek-ek kar ke aa jayenge.
+
 ## Koi masla aaye to
 
 - **Page nahi khul raha:** start.cmd dobara double-click karo.

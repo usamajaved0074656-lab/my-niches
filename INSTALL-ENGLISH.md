@@ -60,6 +60,8 @@ That's it! The channel's name, picture, subscribers and top videos appear by the
 
 Another way: open a niche in the app, click **+ Add channel**, and paste a YouTube channel link.
 
+Many channels at once? Paste all the links into that same box, one per line, and click **Add**. They are added one by one.
+
 ## If something goes wrong
 
 - **The page does not open:** double-click start.cmd again.

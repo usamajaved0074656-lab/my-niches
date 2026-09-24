@@ -49,6 +49,7 @@ Start by asking the user which option they prefer:
 - `public/` — Frontend web interface files.
 - `api/` — Serverless entry point for Vercel.
 - `extension/` — Chrome browser extension.
+- `branding/` — Logo SVGs and `build-icons.mjs` (regenerates every icon with the Edge that ships with Windows).
 - `schema.sql` — PostgreSQL schema for Supabase.
 - `.env.example` — Configuration template.
 - `migrate.js` — Migration script to copy local JSON data to Supabase.
@@ -175,11 +176,12 @@ Provide these instructions to the user to complete their setup:
 
 - **Create a niche:** Click the green **+ New niche** button in the sidebar.
 - **Add a channel:** Open a niche, click **+ Add channel**, and paste a YouTube channel or video link. Or click the green **+** button on YouTube with the Chrome extension.
+- **Bulk add:** The same box accepts many links, one per line (or a column pasted from a sheet). They are added one at a time; failed ones stay in the box; **Stop** ends the run.
 - **Duplicate handling:** A channel cannot be added twice to the same niche (the app alerts that it is already there).
 - **Channel card actions:** Link icon opens YouTube; refresh icon re-fetches channel data; notes button opens notes; "..." menu offers *Open on YouTube*, *Notes*, *Refresh data*, *Move to another niche*, and *Remove from this niche*.
 - **Niche menu actions:** The "..." button next to a niche in the sidebar offers *Rename*, *Pin to top*, *Settings & notes*, *Copy all channel links*, and *Delete niche*.
 - **Copy links:** The button above the cards copies every channel link visible on screen, one per line (respecting search and niche filters).
-- **Removed channels:** When refreshed, channels that YouTube removed are automatically organized into **Removed by YouTube** in the sidebar. Notes are preserved.
+- **Removed channels:** Channels YouTube removed move into **Removed by YouTube** (notes kept) when refreshed, and automatically once a day while the local server runs (Options A and B; not on Vercel). `SWEEP_HOURS=0` in `.env` turns the daily check off.
 - **Search & Sort:** Top search bar searches channels, niches, tags, and notes. The sort button adjusts display order.
 - **Backups:** Bottom sidebar contains **Export backup** (downloads JSON) and **Import backup**.
 

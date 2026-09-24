@@ -26,6 +26,7 @@ Welcome to My Niches! This guide will help you get your personal YouTube niche l
 - `public/` — Web application frontend files.
 - `api/` — Serverless entry point for cloud deployment.
 - `extension/` — Chrome extension files.
+- `branding/` — The logo files, and `build-icons.mjs`, which remakes every icon from them.
 - `schema.sql` — Database table schema for Supabase.
 - `.env.example` — Template for environment configuration.
 - `migrate.js` — Script to copy local data into Supabase.
@@ -160,6 +161,7 @@ Save channels while browsing YouTube:
 
 - **Create a niche:** Click the green **+ New niche** button in the sidebar.
 - **Add a channel:** Open a niche and click **+ Add channel**. Paste a YouTube channel or video link. Alternatively, click the green **+** button next to YouTube's Subscribe button using the Chrome extension.
+- **Add many channels at once:** Paste as many links as you like into the same box, one per line (a column copied from Google Sheets works too), and click **Add**. They are added one by one; any that fail stay in the box so you can try again, and **Stop** ends the run.
 - **Duplicate prevention:** The same channel cannot be added twice to the same niche; the app will notify you that it is already there.
 - **Channel card actions:**
   - Click the **link icon** to open the channel on YouTube.
@@ -168,7 +170,7 @@ Save channels while browsing YouTube:
   - Open the **"..." menu** on any card to access: *Open on YouTube*, *Notes*, *Refresh data*, *Move to another niche*, or *Remove from this niche*.
 - **Niche menu actions:** Click the **"..."** button next to any niche in the sidebar to: *Rename*, *Pin to top*, *Settings & notes*, *Copy all channel links*, or *Delete niche*.
 - **Copy links button:** Located above the channel cards. Copies every channel link visible on screen, one per line (respects the active search filter and selected niche).
-- **Removed channels:** When channels are refreshed, if YouTube has removed them, the app automatically moves them into **Removed by YouTube** in the sidebar. Existing notes are preserved.
+- **Removed channels:** Channels that YouTube removed move into **Removed by YouTube** in the sidebar, with their notes kept. This happens when a card is refreshed, and also by itself once a day while the app runs on your PC (Options A and B): it checks every saved channel, one every 15 seconds. To turn that daily check off, set `SWEEP_HOURS=0` in `.env`.
 - **Search & Sort:** Use the top search box to search across channels, niches, tags, and notes. Click the **Sort** button to change the display order.
 - **Backup & Restore:** Use the sidebar bottom buttons:
   - **Export backup:** Downloads your full library as a JSON file.
