@@ -4,6 +4,12 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>My Niches</title>
+<meta name="description" content="Your personal library of YouTube niches." />
+<meta name="theme-color" content="#0b0b0b" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/manifest.webmanifest" />
 <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
@@ -13,7 +19,7 @@
 
   <aside class="sidebar" id="sidebar">
     <div class="brand">
-      <h1>MY <span>NICHES</span></h1>
+      <h1><img class="brand-mark" src="/logo-mark.svg" alt="" width="24" height="24" />MY <span>NICHES</span></h1>
       <p><span class="dot"></span> <em id="countLabel">0 channels</em></p>
       <p class="byline" id="brandBy">Avantex by Usama javed</p>
     </div>
@@ -158,6 +164,7 @@
 <!-- ============ login gate (only when APP_PASSWORD is set) ============ -->
 <div class="lock" id="lock" hidden>
   <form class="lock-box" id="lockForm">
+    <img class="lock-mark" src="/logo-mark.svg" alt="" width="48" height="48" />
     <h1>MY <span>NICHES</span></h1>
     <p>Enter the password to continue.</p>
     <input type="password" id="lockPass" placeholder="Password" autocomplete="current-password" />

@@ -5,3 +5,4 @@ data/sweep.json
 data/*.tmp
 node_modules/
 data/*.log
+branding/concepts/
