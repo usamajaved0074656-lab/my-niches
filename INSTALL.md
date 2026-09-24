@@ -1,72 +1,75 @@
-# Install My Niches (easy guide)
+# My Niches — Install karne ka aasan tareeqa
 My Niches — by Avantex (Usama javed)
 
-Takes about 10 minutes. Windows + Google Chrome.
+Sirf 10 minute lagte hain. Windows computer aur Google Chrome chahiye.
+Neeche 6 kaam hain. Upar se shuru karo aur ek-ek kar ke karte jao.
 
-## Section 1: Did someone give you a link and a password?
+## Kaam 1: Node.js install karo (sirf pehli dafa)
 
-If yes, you do not need to install the app at all:
+Ye ek chhota program hai jis par My Niches chalta hai.
 
-1. Open the link in your browser, type the password, press Unlock. You stay logged in on this device for a year.
-2. Install the Chrome extension (steps in section 3, below) and connect it: on any YouTube channel page click the green + next to Subscribe. The panel says "Cannot find the server" and shows two boxes. Put the link in "Server address", the password in "Password", press "Save and connect".
+1. Chrome mein ye link kholo: https://nodejs.org
+2. Jis button par **LTS** likha ho, us se download karo.
+3. Download hui file kholo. Har screen par **Next** dabate jao, phir **Install**, phir **Finish**.
 
-That's it. Skip section 2.
+## Kaam 2: Zip file kholo
 
-## Section 2: Run it on your own computer
+1. `my-niches.zip` par **right-click** karo aur **Extract All...** dabao.
+2. **Browse...** dabao, **Documents** chuno, phir **Extract** dabao.
+3. Documents mein `my-niches` naam ka folder ban jayega.
 
-### Step 1 - Install Node.js (one time only)
+Is folder ko kabhi delete ya kahin aur move mat karna. Tool isi se chalta hai.
 
-- Go to https://nodejs.org and download the version marked LTS.
-- Open the downloaded file. Click Next on every screen, keep the defaults, then Install and Finish.
-- (If you skip this, start.cmd will tell you and open the download page.)
+## Kaam 3: Tool chalao
 
-### Step 2 - Unzip My Niches to a permanent place
+1. `my-niches` folder kholo.
+2. **start.cmd** par double-click karo.
+3. Agar neela box aaye "Windows protected your PC": **More info** dabao, phir **Run anyway**.
+4. Agar "Security Warning" aaye: **Run** dabao.
 
-- Right-click my-niches.zip -> Extract All... -> choose a folder you will keep, for example Documents -> Extract.
-- Do not run it from inside the zip. Do not delete or move this folder later (the extension and autostart point to it).
+Browser mein **MY NICHES** khul jayega. Ho gaya!
 
-### Step 3 - Start it
+Neeche taskbar mein ek chhoti kaali window "My Niches server" bhi khulegi. Usay band mat karna.
 
-- Open the my-niches folder and double-click start.cmd.
-- If Windows shows a blue "Windows protected your PC" box: click "More info" then "Run anyway". If it shows "Open File - Security Warning": click Run.
-- A small window called "My Niches server" appears minimised in the taskbar. Keep it open. Your browser opens http://localhost:5173 and you see MY NICHES with an empty library.
+## Kaam 4: Tool ko hamesha chalu rakho
 
-### Step 4 - Make it start with Windows (recommended)
+1. Usi `my-niches` folder mein **install-autostart.cmd** par double-click karo.
+2. Jab "Done" likha aaye, koi bhi key dabao.
 
-- Double-click install-autostart.cmd once. When it says Done, press any key.
-- From now on it starts by itself every time you log in, and restarts itself if it ever stops. To bookmark: http://localhost:5173
+Ab computer on karte hi tool khud chal jayega. start.cmd dobara chalane ki zaroorat nahi.
 
-### Step 5 - Install the extension
+Tool kholne ka link ye hai, isay bookmark kar lo: http://localhost:5173
 
-Follow Section 3 below.
+## Kaam 5: Chrome extension lagao
 
-## Section 3: Install the Chrome extension
+Is se YouTube par Subscribe button ke saath ek hara **+** button aa jata hai.
 
-1. Open Chrome, type chrome://extensions in the address bar, press Enter.
-2. Turn on "Developer mode" (switch at the top right).
-3. Click "Load unpacked" (top left).
-4. Choose the "extension" folder that is INSIDE your my-niches folder -> Select Folder.
-5. "My Niches" appears in the list. Click the puzzle-piece icon in Chrome's toolbar and pin My Niches so it is always visible.
-6. Open any YouTube channel: a green + now sits next to the Subscribe button.
+1. Chrome ke upar address bar mein `chrome://extensions` likho aur **Enter** dabao.
+2. Upar dayein (right) taraf **Developer mode** ka button **on** karo.
+3. Upar bayein (left) taraf **Load unpacked** dabao.
+4. `my-niches` folder kholo, uske **andar** wala **extension** folder chuno, aur **Select Folder** dabao.
+5. Chrome ke upar puzzle jaise icon par click karo aur **My Niches** ke saath pin ka nishaan daba do.
 
-If Chrome later shows a warning about developer-mode extensions, click the option to keep it; it is only this extension.
+## Kaam 6: Pehla channel save karo
 
-## Section 4: Your first niche and channel
+1. My Niches mein hara **+ New niche** button dabao, naam likho (jaise "Cooking") aur save karo.
+2. YouTube par koi bhi channel kholo.
+3. Subscribe ke saath hara **+** dabao aur apni niche chuno.
 
-1. In the app click the green "+ New niche" button, type a name, save.
-2. Click the niche in the left sidebar, then "+ Add channel".
-3. Paste a YouTube channel link (like https://www.youtube.com/@SomeChannel) and click Add channel. Name, picture, subscribers and top videos appear by themselves in a few seconds.
-4. Or, on YouTube, click the green + next to Subscribe and pick the niche.
-5. Every card has a notes button for your own notes.
+Bas! Channel ka naam, tasveer, subscribers aur top videos khud aa jayenge.
 
-## Section 5: Something not working?
+Doosra tareeqa: app mein niche kholo, **+ Add channel** dabao, aur YouTube channel ka link paste karo.
 
-| You see | Do this |
-|---|---|
-| Browser says "This site can't be reached" | Double-click start.cmd again. If it says Node.js is not installed, do Step 1. |
-| Extension says "Cannot find the server" | Double-click start.cmd. (If you use a link from someone: put the link and password in its panel.) |
-| A channel shows no name or subscribers | YouTube is busy; press the refresh icon on the card a bit later. |
-| You moved the my-niches folder | Run install-autostart.cmd again, and in chrome://extensions remove My Niches and Load unpacked again. |
-| Want to stop it starting with Windows | Double-click uninstall-autostart.cmd. |
+## Koi masla aaye to
 
-More options (several PCs, online for a team): see START-HERE.md.
+- **Page nahi khul raha:** start.cmd dobara double-click karo.
+- **Extension kehti hai "Cannot find the server":** start.cmd double-click karo.
+- **"Node.js is not installed" likha aaya:** Kaam 1 karo.
+- **Channel ka naam ya subscribers nahi aaye:** thori der baad us card par refresh wala button dabao.
+- **Folder kahin aur le gaye:** install-autostart.cmd dobara chalao, phir Chrome se extension hata kar Kaam 5 dobara karo.
+
+---
+
+**Kisi ne aapko link aur password diya hai?** To kuch install nahi karna. Link kholo, password daalo, **Unlock** dabao. Phir sirf Kaam 5 karo. YouTube par hara **+** dabane par jo box aaye, usmein link aur password daal kar **Save and connect** dabao.
+
+Team ke liye online chalana ho to START-HERE.md dekho.
